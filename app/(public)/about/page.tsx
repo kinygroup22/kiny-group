@@ -227,12 +227,12 @@ export default function AboutPage() {
                   <div className="w-1/2 px-4 md:px-8">
                     <Card className="border-gold-500/20 hover:border-gold-500/50 transition-all duration-500 hover:shadow-lg hover:shadow-gold-500/20 hover:-translate-y-2 overflow-hidden">
                       <div className="relative h-40 md:h-48 overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent z-10"></div>
+                        <div className="absolute inset-0 bg-linear-to-t from-card via-card/50 to-transparent z-10"></div>
                         <Image 
                           src={item.image} 
                           alt={item.title}
                           fill
-                          className="object-cover transition-transform duration-700"
+                          className="object-contain transition-transform duration-700" // Changed to object-contain
                         />
                         <div className="absolute top-4 right-4 z-20">
                           <div className="bg-gold-500 text-primary-foreground px-3 py-1 md:px-4 md:py-2 rounded-full font-bold text-sm md:text-lg shadow-lg">

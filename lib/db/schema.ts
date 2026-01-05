@@ -220,6 +220,16 @@ export const clients = pgTable("clients", {
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
 });
 
+// Partners Table (NEW)
+export const partners = pgTable("partners", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  logoUrl: varchar("logo_url", { length: 500 }).notNull(),
+  order: integer("order").default(0), // For sorting
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
+});
+
 // Journey Items Table (NEW)
 export const journeyItems = pgTable("journey_items", {
   id: serial("id").primaryKey(),
@@ -400,6 +410,7 @@ export const tables = {
   blogCategories,
   blogPostCategories,
   clients,
+  partners, // NEW
   journeyItems,
   achievements, 
   departments, 
@@ -425,6 +436,8 @@ export type BlogCategory = typeof blogCategories.$inferSelect;
 export type NewBlogCategory = typeof blogCategories.$inferInsert;
 export type Client = typeof clients.$inferSelect;
 export type NewClient = typeof clients.$inferInsert;
+export type Partner = typeof partners.$inferSelect; // NEW
+export type NewPartner = typeof partners.$inferInsert; // NEW
 export type JourneyItem = typeof journeyItems.$inferSelect;
 export type NewJourneyItem = typeof journeyItems.$inferInsert;
 export type Achievement = typeof achievements.$inferSelect; 
