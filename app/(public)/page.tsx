@@ -1,4 +1,3 @@
-// app/(public)/page.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -6,37 +5,9 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { ArrowRight, CheckCircle, Sparkles, Users, TrendingUp, Award, Globe, Shield } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-
-// Define types for the data
-interface ClientLogo {
-  name: string;
-  logo: string;
-}
+import ClientsSection from "@/components/(public)/home/clients-section";
 
 export default function Home() {
-  const [clientLogos, setClientLogos] = useState<ClientLogo[]>([]);
-  const [isLoadingClients, setIsLoadingClients] = useState(true);
-
-  useEffect(() => {
-    const fetchClientLogos = async () => {
-      try {
-        // Fetch client logos
-        const clientsResponse = await fetch('/api/about/clients');
-        if (clientsResponse.ok) {
-          const clientsData = await clientsResponse.json();
-          setClientLogos(clientsData);
-        }
-      } catch (error) {
-        console.error("Error fetching client logos:", error);
-      } finally {
-        setIsLoadingClients(false);
-      }
-    };
-
-    fetchClientLogos();
-  }, []);
-
   return (
     <div className="flex flex-col">
       <section className="relative min-h-screen flex items-center overflow-hidden">
@@ -205,49 +176,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Our Clients & Partners Section */}
-      <section className="py-24 md:py-32 relative bg-background">
-        <div className="container relative mx-auto px-4 md:px-6">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-gold-500)]/10 border border-[var(--color-gold-500)]/20 mb-6">
-              <Globe className="h-4 w-4 text-[var(--color-gold-400)]" />
-              <span className="text-sm font-medium text-[var(--color-gold-300)]">Partners</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-foreground">
-              Our Clients & Partners
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              We are proud to have partnered with leading organizations from various sectors
-            </p>
-          </div>
-
-          {isLoadingClients ? (
-            <div className="flex justify-center items-center h-32">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gold-500"></div>
-            </div>
-          ) : (
-            <Card className="border-gold-500/20 p-4 md:p-8">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                {clientLogos.map((client, index) => (
-                  <div key={index} className="flex flex-col items-center justify-center p-3 md:p-4 rounded-lg hover:bg-accent/50 transition-all duration-300 group">
-                    <div className="relative w-16 h-16 md:w-24 md:h-24 mb-2 md:mb-4">
-                      <Image 
-                        src={client.logo} 
-                        alt={client.name}
-                        fill
-                        className="object-contain grayscale group-hover:grayscale-0 transition-all duration-300"
-                      />
-                    </div>
-                    <span className="text-xs md:text-sm font-medium text-muted-foreground group-hover:text-gold-400 transition-colors">
-                      {client.name}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-        </div>
-      </section>
+      {/* Use the ClientsSection component here */}
+      <ClientsSection />
 
       {/* CTA Section with Enhanced Design */}
       <section className="relative py-24 md:py-32 overflow-hidden bg-background">
