@@ -19,6 +19,7 @@ import {
   Award,
   Briefcase,
   GraduationCap,
+  Handshake,
   LucideIcon
 } from 'lucide-react';
 import { User } from '@/lib/db/schema';
@@ -103,12 +104,6 @@ const menuCategories: MenuCategory[] = [
         roles: ['admin', 'editor'] 
       },
       { 
-        icon: UserCheck, 
-        label: 'Clients', 
-        href: '/dashboard/clients', 
-        roles: ['admin', 'editor'] 
-      },
-      { 
         icon: Award, 
         label: 'Achievements', 
         href: '/dashboard/achievements', 
@@ -124,6 +119,23 @@ const menuCategories: MenuCategory[] = [
         icon: GraduationCap, 
         label: 'Team Members', 
         href: '/dashboard/team-members', 
+        roles: ['admin', 'editor'] 
+      },
+    ]
+  },
+  {
+    label: 'Partners & Clients',
+    items: [
+      { 
+        icon: UserCheck, 
+        label: 'Clients', 
+        href: '/dashboard/clients', 
+        roles: ['admin', 'editor'] 
+      },
+      { 
+        icon: Handshake, 
+        label: 'Partners', 
+        href: '/dashboard/partners', 
         roles: ['admin', 'editor'] 
       },
     ]

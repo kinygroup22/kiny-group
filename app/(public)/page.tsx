@@ -5,11 +5,12 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { ArrowRight, CheckCircle, Sparkles, Users, TrendingUp, Award, Globe, Shield } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import ClientsSection from "@/components/(public)/home/clients-section";
+import PartnersAndClientsSection from "@/components/(public)/home/partner&brand-section";
 
 export default function Home() {
   return (
     <div className="flex flex-col">
+      {/* Hero Section */}
       <section className="relative min-h-screen flex items-center overflow-hidden">
         {/* Parallax Background Image */}
         <div 
@@ -176,8 +177,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Use the ClientsSection component here */}
-      <ClientsSection />
+      {/* Use the combined PartnersAndClientsSection component */}
+      <PartnersAndClientsSection />
 
       {/* CTA Section with Enhanced Design */}
       <section className="relative py-24 md:py-32 overflow-hidden bg-background">
