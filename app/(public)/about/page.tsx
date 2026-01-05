@@ -15,11 +15,6 @@ interface JourneyItem {
   image: string;
 }
 
-interface ClientLogo {
-  name: string;
-  logo: string;
-}
-
 interface Achievement {
   id: number;
   title: string;
@@ -55,7 +50,6 @@ interface Department {
 
 export default function AboutPage() {
   const [journeyItems, setJourneyItems] = useState<JourneyItem[]>([]);
-  const [clientLogos, setClientLogos] = useState<ClientLogo[]>([]);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -69,13 +63,6 @@ export default function AboutPage() {
         if (journeyResponse.ok) {
           const journeyData = await journeyResponse.json();
           setJourneyItems(journeyData);
-        }
-
-        // Fetch client logos
-        const clientsResponse = await fetch('/api/about/clients');
-        if (clientsResponse.ok) {
-          const clientsData = await clientsResponse.json();
-          setClientLogos(clientsData);
         }
 
         // Fetch achievements
@@ -541,38 +528,6 @@ export default function AboutPage() {
               </div>
             </div>
           )}
-        </div>
-
-        {/* Our Clients Section */}
-        <div className="mb-12 md:mb-16">
-          <div className="text-center mb-8 md:mb-12">
-            <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground">
-              Our Clients & Partners
-            </h2>
-            <p className="text-muted-foreground mt-2 md:mt-4 max-w-2xl mx-auto text-sm md:text-base">
-              We are proud to have partnered with leading organizations from various sectors
-            </p>
-          </div>
-
-          <Card className="border-gold-500/20 p-4 md:p-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-              {clientLogos.map((client, index) => (
-                <div key={index} className="flex flex-col items-center justify-center p-3 md:p-4 rounded-lg hover:bg-accent/50 transition-all duration-300 group">
-                  <div className="relative w-16 h-16 md:w-24 md:h-24 mb-2 md:mb-4">
-                    <Image 
-                      src={client.logo} 
-                      alt={client.name}
-                      fill
-                      className="object-contain grayscale group-hover:grayscale-0 transition-all duration-300"
-                    />
-                  </div>
-                  <span className="text-xs md:text-sm font-medium text-muted-foreground group-hover:text-gold-400 transition-colors">
-                    {client.name}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </Card>
         </div>
       </div>
 

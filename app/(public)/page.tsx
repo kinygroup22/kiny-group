@@ -1,10 +1,42 @@
-// Path: app/(public)/page.tsx
+// app/(public)/page.tsx
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, CheckCircle, Sparkles, Users, TrendingUp, Award, Globe, Shield } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+
+// Define types for the data
+interface ClientLogo {
+  name: string;
+  logo: string;
+}
 
 export default function Home() {
+  const [clientLogos, setClientLogos] = useState<ClientLogo[]>([]);
+  const [isLoadingClients, setIsLoadingClients] = useState(true);
+
+  useEffect(() => {
+    const fetchClientLogos = async () => {
+      try {
+        // Fetch client logos
+        const clientsResponse = await fetch('/api/about/clients');
+        if (clientsResponse.ok) {
+          const clientsData = await clientsResponse.json();
+          setClientLogos(clientsData);
+        }
+      } catch (error) {
+        console.error("Error fetching client logos:", error);
+      } finally {
+        setIsLoadingClients(false);
+      }
+    };
+
+    fetchClientLogos();
+  }, []);
+
   return (
     <div className="flex flex-col">
       <section className="relative min-h-screen flex items-center overflow-hidden">
@@ -15,17 +47,17 @@ export default function Home() {
         />
         
         {/* Overlay to make text readable */}
-        <div className="absolute inset-0 bg-linear-to-b from-black/80 via-black/60 to-black/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/80" />
         
         {/* Decorative Elements */}
-        <div className="absolute inset-0 bg-[radial-linear(circle_at_center,rgba(184,134,11,0.15),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(184,134,11,0.15),transparent_70%)]" />
         
         <div className="container relative mx-auto px-4 md:px-6 z-10 pt-10">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">
               <span className="text-white/70">Welcome to</span>
               <br />
-              <span className="bg-linear-to-r from-(--color-gold-300) via-(--color-gold-500) to-(--color-gold-300) bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-(--color-gold-300) via-(--color-gold-500) to-(--color-gold-300) bg-clip-text text-transparent">
                 KINY GROUP
               </span>
             </h1>
@@ -35,7 +67,7 @@ export default function Home() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button asChild size="lg" className="group bg-linear-to-r from-(--color-gold-500) to-(--color-gold-600) hover:from-(--color-gold-600) hover:to-(--color-gold-700) text-white font-semibold px-8 h-14 shadow-lg shadow-(--color-gold-500)/20">
+              <Button asChild size="lg" className="group bg-gradient-to-r from-(--color-gold-500) to-(--color-gold-600) hover:from-(--color-gold-600) hover:to-(--color-gold-700) text-white font-semibold px-8 h-14 shadow-lg shadow-(--color-gold-500)/20">
                 <Link href="/brand">
                   Explore Our Brands
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -65,7 +97,7 @@ export default function Home() {
         </div>
         
         {/* Bottom Fade Effect */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-linear-to-t from-background to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
       </section>
 
       {/* Features Section with Modern Cards */}
@@ -88,9 +120,9 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Card 1 */}
             <Card className="pt-6 group relative overflow-hidden border bg-card backdrop-blur-sm hover:border-[var(--color-gold-500)]/50 transition-all duration-300 hover:shadow-xl hover:shadow-[var(--color-gold-500)]/10">
-              <div className="absolute inset-0 bg-linear-to-br from-[var(--color-gold-500)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-gold-500)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <CardHeader className="relative">
-                <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-[var(--color-gold-500)]/20 to-[var(--color-gold-500)]/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[var(--color-gold-500)]/20 to-[var(--color-gold-500)]/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <CheckCircle className="h-7 w-7 text-[var(--color-gold-500)]" />
                 </div>
                 <CardTitle className="text-2xl mb-3">Premium Quality</CardTitle>
@@ -102,9 +134,9 @@ export default function Home() {
 
             {/* Card 2 */}
             <Card className="pt-6 group relative overflow-hidden border bg-card backdrop-blur-sm hover:border-[var(--color-gold-500)]/50 transition-all duration-300 hover:shadow-xl hover:shadow-[var(--color-gold-500)]/10">
-              <div className="absolute inset-0 bg-linear-to-br from-[var(--color-gold-500)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-gold-500)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <CardHeader className="relative">
-                <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-[var(--color-gold-500)]/20 to-[var(--color-gold-500)]/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[var(--color-gold-500)]/20 to-[var(--color-gold-500)]/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <TrendingUp className="h-7 w-7 text-[var(--color-gold-500)]" />
                 </div>
                 <CardTitle className="text-2xl mb-3">Leading Innovation</CardTitle>
@@ -116,9 +148,9 @@ export default function Home() {
 
             {/* Card 3 */}
             <Card className="pt-6 group relative overflow-hidden border bg-card backdrop-blur-sm hover:border-[var(--color-gold-500)]/50 transition-all duration-300 hover:shadow-xl hover:shadow-[var(--color-gold-500)]/10">
-              <div className="absolute inset-0 bg-linear-to-br from-[var(--color-gold-500)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-gold-500)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <CardHeader className="relative">
-                <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-[var(--color-gold-500)]/20 to-[var(--color-gold-500)]/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[var(--color-gold-500)]/20 to-[var(--color-gold-500)]/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <Users className="h-7 w-7 text-[var(--color-gold-500)]" />
                 </div>
                 <CardTitle className="text-2xl mb-3">Expert Team</CardTitle>
@@ -130,9 +162,9 @@ export default function Home() {
 
             {/* Card 4 */}
             <Card className="pt-6 group relative overflow-hidden border bg-card backdrop-blur-sm hover:border-[var(--color-gold-500)]/50 transition-all duration-300 hover:shadow-xl hover:shadow-[var(--color-gold-500)]/10">
-              <div className="absolute inset-0 bg-linear-to-br from-[var(--color-gold-500)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-gold-500)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <CardHeader className="relative">
-                <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-[var(--color-gold-500)]/20 to-[var(--color-gold-500)]/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[var(--color-gold-500)]/20 to-[var(--color-gold-500)]/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <Globe className="h-7 w-7 text-[var(--color-gold-500)]" />
                 </div>
                 <CardTitle className="text-2xl mb-3">Global Reach</CardTitle>
@@ -144,9 +176,9 @@ export default function Home() {
 
             {/* Card 5 */}
             <Card className="pt-6 group relative overflow-hidden border bg-card backdrop-blur-sm hover:border-[var(--color-gold-500)]/50 transition-all duration-300 hover:shadow-xl hover:shadow-[var(--color-gold-500)]/10">
-              <div className="absolute inset-0 bg-linear-to-br from-[var(--color-gold-500)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-gold-500)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <CardHeader className="relative">
-                <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-[var(--color-gold-500)]/20 to-[var(--color-gold-500)]/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[var(--color-gold-500)]/20 to-[var(--color-gold-500)]/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <Shield className="h-7 w-7 text-[var(--color-gold-500)]" />
                 </div>
                 <CardTitle className="text-2xl mb-3">Trust & Security</CardTitle>
@@ -158,9 +190,9 @@ export default function Home() {
 
             {/* Card 6 */}
             <Card className="pt-6 group relative overflow-hidden border bg-card backdrop-blur-sm hover:border-[var(--color-gold-500)]/50 transition-all duration-300 hover:shadow-xl hover:shadow-[var(--color-gold-500)]/10">
-              <div className="absolute inset-0 bg-linear-to-br from-[var(--color-gold-500)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-gold-500)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <CardHeader className="relative">
-                <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-[var(--color-gold-500)]/20 to-[var(--color-gold-500)]/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[var(--color-gold-500)]/20 to-[var(--color-gold-500)]/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <Sparkles className="h-7 w-7 text-[var(--color-gold-500)]" />
                 </div>
                 <CardTitle className="text-2xl mb-3">Premium Support</CardTitle>
@@ -173,10 +205,54 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Our Clients & Partners Section */}
+      <section className="py-24 md:py-32 relative bg-background">
+        <div className="container relative mx-auto px-4 md:px-6">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-gold-500)]/10 border border-[var(--color-gold-500)]/20 mb-6">
+              <Globe className="h-4 w-4 text-[var(--color-gold-400)]" />
+              <span className="text-sm font-medium text-[var(--color-gold-300)]">Partners</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-foreground">
+              Our Clients & Partners
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              We are proud to have partnered with leading organizations from various sectors
+            </p>
+          </div>
+
+          {isLoadingClients ? (
+            <div className="flex justify-center items-center h-32">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gold-500"></div>
+            </div>
+          ) : (
+            <Card className="border-gold-500/20 p-4 md:p-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                {clientLogos.map((client, index) => (
+                  <div key={index} className="flex flex-col items-center justify-center p-3 md:p-4 rounded-lg hover:bg-accent/50 transition-all duration-300 group">
+                    <div className="relative w-16 h-16 md:w-24 md:h-24 mb-2 md:mb-4">
+                      <Image 
+                        src={client.logo} 
+                        alt={client.name}
+                        fill
+                        className="object-contain grayscale group-hover:grayscale-0 transition-all duration-300"
+                      />
+                    </div>
+                    <span className="text-xs md:text-sm font-medium text-muted-foreground group-hover:text-gold-400 transition-colors">
+                      {client.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+        </div>
+      </section>
+
       {/* CTA Section with Enhanced Design */}
       <section className="relative py-24 md:py-32 overflow-hidden bg-background">
-        <div className="absolute inset-0 bg-linear-to-br from-[var(--color-gold-500)]/10 via-[var(--color-gold-500)]/5 to-background" />
-        <div className="absolute inset-0 bg-[radial-linear(circle_at_center,rgba(184,134,11,0.15),transparent_70%)]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-gold-500)]/10 via-[var(--color-gold-500)]/5 to-background" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(184,134,11,0.15),transparent_70%)]" />
         
         <div className="container relative mx-auto px-4 md:px-6">
           <div className="max-w-4xl mx-auto">
@@ -199,7 +275,7 @@ export default function Home() {
                 </CardDescription>
                 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button asChild size="lg" className="group bg-linear-to-r from-[var(--color-gold-500)] to-[var(--color-gold-600)] hover:from-[var(--color-gold-600)] hover:to-[var(--color-gold-700)] text-white font-semibold px-8 h-14 shadow-lg shadow-[var(--color-gold-500)]/20">
+                  <Button asChild size="lg" className="group bg-gradient-to-r from-[var(--color-gold-500)] to-[var(--color-gold-600)] hover:from-[var(--color-gold-600)] hover:to-[var(--color-gold-700)] text-white font-semibold px-8 h-14 shadow-lg shadow-[var(--color-gold-500)]/20">
                     <Link href="/contact">
                       Start Your Journey
                       <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
