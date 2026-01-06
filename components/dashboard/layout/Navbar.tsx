@@ -70,7 +70,7 @@ export function Navbar({ user, onMenuClick }: NavbarProps) {
   return (
     <>
       <header className="sticky top-0 z-40 bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/60 border-b border-border">
-        <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-end h-16 px-4 sm:px-6 lg:px-8">
           {/* Mobile menu button */}
           <button
             onClick={onMenuClick}
@@ -80,7 +80,7 @@ export function Navbar({ user, onMenuClick }: NavbarProps) {
           </button>
 
           {/* Search bar */}
-          <div className="flex-1 max-w-2xl mx-4">
+          {/* <div className="flex-1 max-w-2xl mx-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <input
@@ -89,7 +89,7 @@ export function Navbar({ user, onMenuClick }: NavbarProps) {
                 className="w-full pl-10 pr-4 py-2 bg-muted border-0 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-all"
               />
             </div>
-          </div>
+          </div> */}
 
           {/* Right side actions */}
           <div className="flex items-center gap-2">
