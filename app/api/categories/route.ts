@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // app/api/categories/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";

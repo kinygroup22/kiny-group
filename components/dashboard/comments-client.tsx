@@ -14,7 +14,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MessageSquare, ExternalLink, Search, Filter, X } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { MessageSquare, ExternalLink, Search, Filter, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { DeleteCommentButton } from "@/components/dashboard/delete-comment-button";
@@ -40,11 +48,14 @@ type CommentsClientProps = {
 type FilterType = "all" | "top-level" | "replies";
 type SortType = "newest" | "oldest";
 
+const ITEMS_PER_PAGE = 10;
+
 export function CommentsClient({ comments, userRole }: CommentsClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<FilterType>("all");
   const [sortType, setSortType] = useState<SortType>("newest");
   const [selectedPost, setSelectedPost] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Get unique posts for filter dropdown
   const uniquePosts = useMemo(() => {
@@ -114,12 +125,25 @@ export function CommentsClient({ comments, userRole }: CommentsClientProps) {
     };
   }, [comments]);
 
+  // Pagination
+  const totalPages = Math.ceil(filteredComments.length / ITEMS_PER_PAGE);
+  const paginatedComments = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredComments.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredComments, currentPage]);
+
+  // Reset page when filters change
+  const handleFilterChange = () => {
+    setCurrentPage(1);
+  };
+
   // Clear all filters
   const clearFilters = () => {
     setSearchQuery("");
     setFilterType("all");
     setSelectedPost("all");
     setSortType("newest");
+    setCurrentPage(1);
   };
 
   const hasActiveFilters =
@@ -209,13 +233,22 @@ export function CommentsClient({ comments, userRole }: CommentsClientProps) {
                   placeholder="Search comments, authors, or posts..."
                   className="pl-10"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    handleFilterChange();
+                  }}
                 />
               </div>
 
               {/* Filter Type */}
-              <Select value={filterType} onValueChange={(value: FilterType) => setFilterType(value)}>
-                <SelectTrigger className="w-full md:w-[180px]">
+              <Select 
+                value={filterType} 
+                onValueChange={(value: FilterType) => {
+                  setFilterType(value);
+                  handleFilterChange();
+                }}
+              >
+                <SelectTrigger className="w-full md:w-45">
                   <Filter className="w-4 h-4 mr-2" />
                   <SelectValue />
                 </SelectTrigger>
@@ -227,8 +260,14 @@ export function CommentsClient({ comments, userRole }: CommentsClientProps) {
               </Select>
 
               {/* Sort */}
-              <Select value={sortType} onValueChange={(value: SortType) => setSortType(value)}>
-                <SelectTrigger className="w-full md:w-[150px]">
+              <Select 
+                value={sortType} 
+                onValueChange={(value: SortType) => {
+                  setSortType(value);
+                  handleFilterChange();
+                }}
+              >
+                <SelectTrigger className="w-full md:w-37.5">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -240,8 +279,14 @@ export function CommentsClient({ comments, userRole }: CommentsClientProps) {
 
             {/* Post Filter */}
             <div className="flex flex-col md:flex-row gap-4">
-              <Select value={selectedPost} onValueChange={setSelectedPost}>
-                <SelectTrigger className="w-full md:w-[300px]">
+              <Select 
+                value={selectedPost} 
+                onValueChange={(value) => {
+                  setSelectedPost(value);
+                  handleFilterChange();
+                }}
+              >
+                <SelectTrigger className="w-full md:w-75">
                   <SelectValue placeholder="Filter by post" />
                 </SelectTrigger>
                 <SelectContent>
@@ -275,7 +320,10 @@ export function CommentsClient({ comments, userRole }: CommentsClientProps) {
                     Search: &quot;{searchQuery}&quot;
                     <X
                       className="w-3 h-3 cursor-pointer"
-                      onClick={() => setSearchQuery("")}
+                      onClick={() => {
+                        setSearchQuery("");
+                        handleFilterChange();
+                      }}
                     />
                   </Badge>
                 )}
@@ -284,7 +332,10 @@ export function CommentsClient({ comments, userRole }: CommentsClientProps) {
                     Type: {filterType === "top-level" ? "Top Level" : "Replies"}
                     <X
                       className="w-3 h-3 cursor-pointer"
-                      onClick={() => setFilterType("all")}
+                      onClick={() => {
+                        setFilterType("all");
+                        handleFilterChange();
+                      }}
                     />
                   </Badge>
                 )}
@@ -293,7 +344,10 @@ export function CommentsClient({ comments, userRole }: CommentsClientProps) {
                     Post: {uniquePosts.find(([slug]) => slug === selectedPost)?.[1]}
                     <X
                       className="w-3 h-3 cursor-pointer"
-                      onClick={() => setSelectedPost("all")}
+                      onClick={() => {
+                        setSelectedPost("all");
+                        handleFilterChange();
+                      }}
                     />
                   </Badge>
                 )}
@@ -302,7 +356,10 @@ export function CommentsClient({ comments, userRole }: CommentsClientProps) {
                     Sort: Oldest First
                     <X
                       className="w-3 h-3 cursor-pointer"
-                      onClick={() => setSortType("newest")}
+                      onClick={() => {
+                        setSortType("newest");
+                        handleFilterChange();
+                      }}
                     />
                   </Badge>
                 )}
@@ -315,135 +372,188 @@ export function CommentsClient({ comments, userRole }: CommentsClientProps) {
       {/* Results Summary */}
       {hasActiveFilters && (
         <div className="mb-4 text-sm text-muted-foreground">
-          Showing {filteredComments.length} of {comments.length} comment
+          Showing {paginatedComments.length} of {filteredComments.length} comment
           {filteredComments.length !== 1 ? "s" : ""}
+          {filteredComments.length !== comments.length && ` (filtered from ${comments.length} total)`}
         </div>
       )}
 
-      {/* Comments List */}
-      <div className="space-y-4">
-        {filteredComments.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center py-12">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-                  <MessageSquare className="w-8 h-8 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-medium text-foreground mb-2">
-                  {comments.length === 0 ? "No comments yet" : "No comments found"}
-                </h3>
-                <p className="text-muted-foreground">
-                  {comments.length === 0
-                    ? "Comments will appear here once users start engaging with your posts"
-                    : "Try adjusting your filters to see more results"}
-                </p>
-                {hasActiveFilters && (
-                  <Button
-                    variant="outline"
-                    onClick={clearFilters}
-                    className="mt-4"
-                  >
-                    Clear All Filters
-                  </Button>
-                )}
+      {/* Comments Table */}
+      <Card>
+        <CardContent className="p-0">
+          {filteredComments.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+                <MessageSquare className="w-8 h-8 text-muted-foreground" />
               </div>
-            </CardContent>
-          </Card>
-        ) : (
-          filteredComments.map((comment) => (
-            <Card key={comment.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="pt-6">
-                <div className="space-y-4">
-                  {/* Comment Header */}
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3 flex-1">
-                      {/* Author Avatar */}
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                        <span className="text-sm font-semibold text-primary">
-                          {(comment.authorName || comment.authorEmail || "U")
-                            .charAt(0)
-                            .toUpperCase()}
-                        </span>
-                      </div>
-
-                      {/* Comment Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-medium text-foreground">
-                            {comment.authorName || comment.authorEmail || "Anonymous"}
-                          </p>
-                          {comment.parentId && (
-                            <Badge variant="secondary" className="text-xs">
-                              Reply
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>
-                            {formatDistanceToNow(new Date(comment.createdAt), {
-                              addSuffix: true,
-                            })}
-                          </span>
-                          <span>•</span>
+              <h3 className="text-lg font-medium text-foreground mb-2">
+                {comments.length === 0 ? "No comments yet" : "No comments found"}
+              </h3>
+              <p className="text-muted-foreground">
+                {comments.length === 0
+                  ? "Comments will appear here once users start engaging with your posts"
+                  : "Try adjusting your filters to see more results"}
+              </p>
+              {hasActiveFilters && (
+                <Button
+                  variant="outline"
+                  onClick={clearFilters}
+                  className="mt-4"
+                >
+                  Clear All Filters
+                </Button>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Author</TableHead>
+                      <TableHead>Comment</TableHead>
+                      <TableHead>Post</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedComments.map((comment) => (
+                      <TableRow key={comment.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                              <span className="text-xs font-semibold text-primary">
+                                {(comment.authorName || comment.authorEmail || "U")
+                                  .charAt(0)
+                                  .toUpperCase()}
+                              </span>
+                            </div>
+                            <div>
+                              <div className="font-medium">
+                                {comment.authorName || comment.authorEmail || "Anonymous"}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {comment.authorEmail}
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="max-w-md truncate">
+                            {comment.content}
+                          </div>
+                        </TableCell>
+                        <TableCell>
                           <Link
                             href={`/blog/${comment.postSlug}`}
-                            className="hover:text-primary transition-colors truncate"
+                            className="text-primary hover:underline truncate block max-w-xs"
                           >
                             {comment.postTitle}
                           </Link>
-                        </div>
-                      </div>
-                    </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {formatDistanceToNow(new Date(comment.createdAt), {
+                            addSuffix: true,
+                          })}
+                        </TableCell>
+                        <TableCell>
+                          {comment.parentId ? (
+                            <Badge variant="secondary">Reply</Badge>
+                          ) : (
+                            <Badge variant="outline">Top Level</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Link href={`/blog/${comment.postSlug}`} target="_blank">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                                <span className="sr-only">View Post</span>
+                              </Button>
+                            </Link>
+                            {(userRole === "admin" || userRole === "editor") && (
+                              <DeleteCommentButton
+                                commentId={comment.id}
+                                commentPreview={comment.content.substring(0, 100)}
+                              />
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to{" "}
+                    {Math.min(currentPage * ITEMS_PER_PAGE, filteredComments.length)} of{" "}
+                    {filteredComments.length} comments
+                    {hasActiveFilters && ` (filtered from ${comments.length} total)`}
                   </div>
-
-                  {/* Comment Content */}
-                  <div className="pl-13">
-                    <div className="p-4 bg-muted/50 rounded-lg border border-border">
-                      <p className="text-foreground whitespace-pre-wrap break-words">
-                        {comment.content}
-                      </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="flex items-center gap-1"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Previous
+                    </Button>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={currentPage === pageNum ? "default" : "outline"}
+                            size="sm"
+                            className="w-8 h-8 p-0"
+                            onClick={() => setCurrentPage(pageNum)}
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      })}
                     </div>
-                  </div>
-
-                  {/* Comment Actions */}
-                  <div className="pl-13 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Link href={`/blog/${comment.postSlug}`} target="_blank">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                          View Post
-                        </Button>
-                      </Link>
-                    </div>
-
-                    {(userRole === "admin" || userRole === "editor") && (
-                      <DeleteCommentButton
-                        commentId={comment.id}
-                        commentPreview={comment.content.substring(0, 100)}
-                      />
-                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className="flex items-center gap-1"
+                    >
+                      Next
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
-
-      {/* Pagination Info */}
-      {filteredComments.length > 0 && (
-        <div className="mt-8 flex justify-center">
-          <p className="text-sm text-muted-foreground">
-            Showing {filteredComments.length} comment
-            {filteredComments.length !== 1 ? "s" : ""}
-            {hasActiveFilters && ` (filtered from ${comments.length} total)`}
-          </p>
-        </div>
-      )}
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

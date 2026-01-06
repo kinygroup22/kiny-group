@@ -23,7 +23,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "KINY GROUP | Premium Business Solutions",
+    default: "KINY GROUP",
     template: "%s | KINY GROUP",
   },
   description: "Transforming industries through innovation, excellence, and unwavering commitment to quality across our diverse portfolio of brands.",
