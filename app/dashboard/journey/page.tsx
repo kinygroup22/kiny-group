@@ -10,9 +10,9 @@ import { journeyItems } from "@/lib/db/schema";
 import { or, ilike, sql } from "drizzle-orm";
 import { formatDistanceToNow } from "date-fns";
 import { DashboardHeader } from "@/components/dashboard/layout/dashboard-header";
-import { DeleteButton } from "@/components/dashboard/delete-button";
 import Image from "next/image";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
+import { DeleteJourneyButton } from "@/components/dashboard/journey/delete-journey-button";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -185,10 +185,9 @@ export default async function JourneyPage({
                               </Button>
                             </Link>
                             {user.role === "admin" && (
-                              <DeleteButton 
+                              <DeleteJourneyButton 
                                 id={item.id}
-                                resourceType="journey"
-                                resourceName={item.title}
+                                title={item.title}
                               />
                             )}
                           </div>

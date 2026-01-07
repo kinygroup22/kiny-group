@@ -1,34 +1,72 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// app/api/clients/route.ts
+// app/api/clients/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { clients } from "@/lib/db/schema";
-import { requireEditor } from "@/lib/auth";
+import { requireEditor, requireAdmin } from "@/lib/auth";
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
-// GET: Fetch all clients
-export async function GET() {
+// GET: Fetch a single client
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<Record<string, string>> }
+) {
   try {
-    const allClients = await db
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
+    const clientId = parseInt(id);
+    
+    if (isNaN(clientId)) {
+      return NextResponse.json({ error: "Invalid client ID" }, { status: 400 });
+    }
+
+    const client = await db
       .select()
       .from(clients)
-      .orderBy(clients.order);
-    
-    return NextResponse.json(allClients);
+      .where(eq(clients.id, clientId))
+      .limit(1);
+
+    if (client.length === 0) {
+      return NextResponse.json({ error: "Client not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(client[0]);
   } catch (error) {
-    console.error("Error fetching clients:", error);
+    console.error("Error fetching client:", error);
     return NextResponse.json(
-      { error: "Failed to fetch clients" },
+      { error: "Failed to fetch client" },
       { status: 500 }
     );
   }
 }
 
-// POST: Create a new client
-export async function POST(request: NextRequest) {
+// PUT: Update a client
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<Record<string, string>> }
+) {
   try {
-    const user = await requireEditor();
+    await requireEditor();
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
+    const clientId = parseInt(id);
+
+    if (isNaN(clientId)) {
+      return NextResponse.json({ error: "Invalid client ID" }, { status: 400 });
+    }
+
     const body = await request.json();
+
+    // Check if client exists
+    const existing = await db
+      .select()
+      .from(clients)
+      .where(eq(clients.id, clientId))
+      .limit(1);
+
+    if (existing.length === 0) {
+      return NextResponse.json({ error: "Client not found" }, { status: 404 });
+    }
 
     // Validate required fields
     if (!body.name || !body.logoUrl) {
@@ -46,31 +84,78 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const newClient = await db
-      .insert(clients)
-      .values({
+    const updatedClient = await db
+      .update(clients)
+      .set({
         name: body.name,
         logoUrl: body.logoUrl,
         order: body.order || 0,
-        createdAt: new Date(),
         updatedAt: new Date(),
       })
+      .where(eq(clients.id, clientId))
       .returning();
 
     revalidatePath("/dashboard/clients");
     revalidatePath("/");
 
     return NextResponse.json({
-      message: "Client created successfully",
-      client: newClient[0],
-    }, { status: 201 });
+      message: "Client updated successfully",
+      client: updatedClient[0],
+    });
   } catch (error) {
-    console.error("Error creating client:", error);
+    console.error("Error updating client:", error);
     if (error instanceof Error && error.message.includes("Unauthorized")) {
       return NextResponse.json({ error: error.message }, { status: 401 });
     }
     return NextResponse.json(
-      { error: "Failed to create client." },
+      { error: "Failed to update client." },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE: Delete a client
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<Record<string, string>> }
+) {
+  try {
+    await requireAdmin();
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
+    const clientId = parseInt(id);
+
+    if (isNaN(clientId)) {
+      return NextResponse.json({ error: "Invalid client ID" }, { status: 400 });
+    }
+
+    // Check if client exists
+    const existing = await db
+      .select()
+      .from(clients)
+      .where(eq(clients.id, clientId))
+      .limit(1);
+
+    if (existing.length === 0) {
+      return NextResponse.json({ error: "Client not found" }, { status: 404 });
+    }
+
+    await db.delete(clients).where(eq(clients.id, clientId));
+
+    revalidatePath("/dashboard/clients");
+    revalidatePath("/");
+
+    return NextResponse.json({
+      success: true,
+      message: "Client deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting client:", error);
+    if (error instanceof Error && error.message.includes("Unauthorized")) {
+      return NextResponse.json({ error: error.message }, { status: 401 });
+    }
+    return NextResponse.json(
+      { error: "Failed to delete client." },
       { status: 500 }
     );
   }

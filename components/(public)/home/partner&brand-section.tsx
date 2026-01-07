@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Globe, Users, Award } from "lucide-react";
+import { Globe, Users, Award, Star } from "lucide-react";
 import Image from "next/image";
 
 interface PartnerData {
@@ -13,6 +13,7 @@ interface PartnerData {
 interface ClientData {
   name: string;
   logo: string;
+  featured?: boolean;
 }
 
 export default function PartnersAndClientsSection() {
@@ -54,9 +55,16 @@ export default function PartnersAndClientsSection() {
     fetchClients();
   }, []);
 
-  // Create enough duplicates for seamless infinite scroll
-  const duplicatedPartners = [...partners, ...partners, ...partners, ...partners];
-  const duplicatedClients = [...clients, ...clients, ...clients, ...clients];
+  // Separate featured and regular clients
+  const featuredClients = clients.filter(client => client.featured);
+  const regularClients = clients.filter(client => !client.featured);
+  
+  // If no featured flag exists, take first 8 as featured
+  const displayFeatured = featuredClients.length > 0 ? featuredClients : clients.slice(0, 8);
+  const displayRegular = featuredClients.length > 0 ? regularClients : clients.slice(8);
+
+  // Create duplicates for infinite scroll
+  const duplicatedFeatured = [...displayFeatured, ...displayFeatured, ...displayFeatured, ...displayFeatured];
 
   const isLoading = isLoadingPartners || isLoadingClients;
 
@@ -81,29 +89,29 @@ export default function PartnersAndClientsSection() {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--color-gold-500)]"></div>
           </div>
         ) : (
-          <div className="space-y-20 md:space-y-28">
-            {/* Clients Section - Now on Top with Much Larger Icons */}
+          <div className="space-y-20 md:space-y-28 max-w-7xl mx-auto">
+            {/* Clients Section - Infinite Scroll */}
             <div>
               <div className="text-center mb-10">
                 <div className="inline-flex items-center gap-4 mb-4">
                   <div className="h-1 w-8 bg-gradient-to-r from-transparent to-[var(--color-gold-500)] rounded-full"></div>
-                  <Globe className="h-7 w-7 md:h-9 md:w-9 text-[var(--color-gold-500)]" />
+                  <Star className="h-7 w-7 md:h-9 md:w-9 text-[var(--color-gold-500)]" />
                   <div className="h-1 w-8 bg-gradient-to-l from-transparent to-[var(--color-gold-500)] rounded-full"></div>
                 </div>
                 <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-3">
-                  Our Clients
+                  Clients
                 </h3>
-                <p className="text-sm md:text-base text-muted-foreground">Leading companies who trust us</p>
+                <p className="text-sm md:text-base text-muted-foreground">Growing together with excellence</p>
               </div>
               
-              <div className="relative w-full overflow-hidden py-4 md:py-6">
+              <div className="relative w-full overflow-hidden py-6 md:py-8">
                 {/* Enhanced gradient overlays */}
-                <div className="absolute top-0 left-0 bottom-0 w-16 md:w-32 bg-gradient-to-r from-background via-background/90 to-transparent pointer-events-none z-10" />
-                <div className="absolute top-0 right-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-background via-background/90 to-transparent pointer-events-none z-10" />
+                <div className="absolute top-0 left-0 bottom-0 w-20 md:w-32 bg-gradient-to-r from-background via-background/90 to-transparent pointer-events-none z-10" />
+                <div className="absolute top-0 right-0 bottom-0 w-20 md:w-32 bg-gradient-to-l from-background via-background/90 to-transparent pointer-events-none z-10" />
                 
                 <div className="relative flex items-center">
                   <style jsx global>{`
-                    @keyframes scroll-clients {
+                    @keyframes scroll-featured {
                       0% {
                         transform: translateX(0);
                       }
@@ -112,30 +120,30 @@ export default function PartnersAndClientsSection() {
                       }
                     }
                     
-                    .scroll-container-clients {
+                    .scroll-container-featured {
                       display: flex;
-                      animation: scroll-clients 120s linear infinite;
+                      animation: scroll-featured 80s linear infinite;
                       width: fit-content;
                     }
                     
-                    .scroll-container-clients:hover {
+                    .scroll-container-featured:hover {
                       animation-play-state: paused;
                     }
                     
                     @media (max-width: 768px) {
-                      .scroll-container-clients {
-                        animation-duration: 80s;
+                      .scroll-container-featured {
+                        animation-duration: 60s;
                       }
                     }
                   `}</style>
                   
-                  <div className="scroll-container-clients">
-                    {duplicatedClients.map((client, index) => (
+                  <div className="scroll-container-featured">
+                    {duplicatedFeatured.map((client, index) => (
                       <div 
-                        key={`client-${client.name}-${index}`} 
-                        className="flex-shrink-0 flex flex-col items-center justify-center px-6 md:px-8 lg:px-10 py-4 md:py-6 lg:py-8 group"
+                        key={`featured-${client.name}-${index}`} 
+                        className="flex-shrink-0 flex flex-col items-center justify-center px-6 md:px-8 lg:px-10 py-4 md:py-6 group"
                       >
-                        <div className="relative w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 xl:w-48 xl:h-48 mb-4 md:mb-6 rounded-xl bg-gradient-to-br from-background/50 to-background/30 backdrop-blur-sm p-4 md:p-6 border border-border/50 group-hover:border-[var(--color-gold-500)]/30 transition-all duration-500 group-hover:shadow-xl group-hover:shadow-[var(--color-gold-500)]/15 group-hover:scale-105">
+                        <div className="relative w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 mb-4 md:mb-6 rounded-2xl bg-gradient-to-br from-background/60 to-background/40 backdrop-blur-sm p-6 md:p-8 border border-border/50 group-hover:border-[var(--color-gold-500)]/50 transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-[var(--color-gold-500)]/20 group-hover:scale-105">
                           <Image 
                             src={client.logo} 
                             alt={client.name}
@@ -143,7 +151,7 @@ export default function PartnersAndClientsSection() {
                             className="object-contain grayscale group-hover:grayscale-0 transition-all duration-500 opacity-80 group-hover:opacity-100 p-2"
                           />
                         </div>
-                        <span className="text-sm md:text-base lg:text-lg font-semibold text-muted-foreground group-hover:text-[var(--color-gold-400)] transition-colors duration-300 text-center max-w-[140px] md:max-w-[180px] lg:max-w-[220px]">
+                        <span className="text-base md:text-lg font-semibold text-foreground group-hover:text-[var(--color-gold-400)] transition-colors duration-300 text-center max-w-[160px] md:max-w-[200px]">
                           {client.name}
                         </span>
                       </div>
@@ -152,81 +160,79 @@ export default function PartnersAndClientsSection() {
                 </div>
               </div>
             </div>
-            
-            {/* Partners Section - Kept at Original Size for Contrast */}
-            <div>
-              <div className="text-center mb-6">
-                <div className="inline-flex items-center gap-3 mb-3">
-                  <div className="h-1 w-6 bg-gradient-to-r from-transparent to-[var(--color-gold-500)]/60 rounded-full"></div>
-                  <Users className="h-5 w-5 md:h-7 md:w-7 text-[var(--color-gold-500)]/80" />
-                  <div className="h-1 w-6 bg-gradient-to-l from-transparent to-[var(--color-gold-500)]/60 rounded-full"></div>
+
+            {/* More Clients Grid - Compact Display for 24+ items */}
+            {displayRegular.length > 0 && (
+              <div>
+                <div className="text-center mb-10">
+                  <div className="inline-flex items-center gap-4 mb-4">
+                    <div className="h-1 w-8 bg-gradient-to-r from-transparent to-[var(--color-gold-500)]/60 rounded-full"></div>
+                    <Globe className="h-6 w-6 md:h-8 md:w-8 text-[var(--color-gold-500)]/80" />
+                    <div className="h-1 w-8 bg-gradient-to-l from-transparent to-[var(--color-gold-500)]/60 rounded-full"></div>
+                  </div>
+                  <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+                    More Clients
+                  </h3>
                 </div>
-                <h3 className="text-xl md:text-2xl font-bold text-foreground mb-1">
-                  Our Partners
-                </h3>
-                <p className="text-xs md:text-sm text-muted-foreground">Strategic partnerships for success</p>
-              </div>
-              
-              <div className="relative w-full overflow-hidden py-2">
-                {/* Gradient overlays */}
-                <div className="absolute top-0 left-0 bottom-0 w-12 md:w-24 bg-gradient-to-r from-background via-background/85 to-transparent pointer-events-none z-10" />
-                <div className="absolute top-0 right-0 bottom-0 w-12 md:w-24 bg-gradient-to-l from-background via-background/85 to-transparent pointer-events-none z-10" />
-                
-                <div className="relative flex items-center">
-                  <style jsx global>{`
-                    @keyframes scroll-partners {
-                      0% {
-                        transform: translateX(-50%);
-                      }
-                      100% {
-                        transform: translateX(0);
-                      }
-                    }
-                    
-                    .scroll-container-partners {
-                      display: flex;
-                      animation: scroll-partners 30s linear infinite;
-                      width: fit-content;
-                    }
-                    
-                    .scroll-container-partners:hover {
-                      animation-play-state: paused;
-                    }
-                    
-                    @media (max-width: 768px) {
-                      .scroll-container-partners {
-                        animation-duration: 20s;
-                      }
-                    }
-                    
-                    @media (min-width: 1920px) {
-                      .scroll-container-partners {
-                        animation-duration: 40s;
-                      }
-                    }
-                  `}</style>
-                  
-                  <div className="scroll-container-partners">
-                    {duplicatedPartners.map((partner, index) => (
+
+                <div className="flex justify-center">
+                  <div className="flex flex-wrap justify-center gap-3 md:gap-4 w-full max-w-7xl">
+                    {displayRegular.map((client, index) => (
                       <div 
-                        key={`partner-${partner.name}-${index}`} 
-                        className="flex-shrink-0 flex flex-col items-center justify-center px-3 md:px-5 py-2 md:py-3 group"
+                        key={`regular-${client.name}-${index}`}
+                        className="group flex flex-col items-center w-[calc(25%-9px)] md:w-[calc(16.666%-13.33px)] lg:w-[calc(12.5%-10.5px)]"
                       >
-                        <div className="relative w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 mb-1 md:mb-2 rounded-lg bg-background/30 backdrop-blur-sm p-1 md:p-2 border border-border/30 group-hover:border-[var(--color-gold-500)]/20 transition-all duration-500 group-hover:shadow-md group-hover:shadow-[var(--color-gold-500)]/5 group-hover:scale-105">
+                        <div className="relative w-full aspect-square rounded-lg bg-background/30 backdrop-blur-sm p-2 md:p-3 border border-border/30 group-hover:border-[var(--color-gold-500)]/30 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-[var(--color-gold-500)]/10 group-hover:scale-105">
                           <Image 
-                            src={partner.logo} 
-                            alt={partner.name}
+                            src={client.logo} 
+                            alt={client.name}
                             fill
-                            className="object-contain grayscale group-hover:grayscale-0 transition-all duration-500 opacity-70 group-hover:opacity-100"
+                            className="object-contain grayscale group-hover:grayscale-0 transition-all duration-300 opacity-70 group-hover:opacity-100 p-1"
                           />
                         </div>
-                        <span className="text-xs font-medium text-muted-foreground group-hover:text-[var(--color-gold-400)] transition-colors duration-300 text-center max-w-[80px] md:max-w-[120px]">
-                          {partner.name}
+                        <span className="text-[10px] md:text-xs font-medium text-muted-foreground group-hover:text-[var(--color-gold-400)] transition-colors duration-300 text-center mt-1.5 line-clamp-2 max-w-full px-1">
+                          {client.name}
                         </span>
                       </div>
                     ))}
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Partners Section - Elegant Static Grid */}
+            <div>
+              <div className="text-center mb-10">
+                <div className="inline-flex items-center gap-3 mb-3">
+                  <div className="h-1 w-6 bg-gradient-to-r from-transparent to-[var(--color-gold-500)] rounded-full"></div>
+                  <Users className="h-6 w-6 md:h-8 md:w-8 text-[var(--color-gold-500)]" />
+                  <div className="h-1 w-6 bg-gradient-to-l from-transparent to-[var(--color-gold-500)] rounded-full"></div>
+                </div>
+                <h3 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-3">
+                  Strategic Partners
+                </h3>
+                <p className="text-sm md:text-base text-muted-foreground">Collaborating for mutual success</p>
+              </div>
+              
+              <div className="flex flex-wrap justify-center items-center gap-6 md:gap-8 lg:gap-12">
+                {partners.map((partner, index) => (
+                  <div 
+                    key={`partner-${partner.name}-${index}`} 
+                    className="group flex flex-col items-center"
+                  >
+                    <div className="relative w-28 h-28 md:w-36 md:h-36 lg:w-40 lg:h-40 rounded-xl bg-gradient-to-br from-background/50 to-background/30 backdrop-blur-sm p-5 md:p-6 border border-border/40 group-hover:border-[var(--color-gold-500)]/40 transition-all duration-500 group-hover:shadow-xl group-hover:shadow-[var(--color-gold-500)]/15 group-hover:scale-110">
+                      <Image 
+                        src={partner.logo} 
+                        alt={partner.name}
+                        fill
+                        className="object-contain grayscale group-hover:grayscale-0 transition-all duration-500 opacity-75 group-hover:opacity-100 p-2"
+                      />
+                    </div>
+                    <span className="text-sm md:text-base font-semibold text-foreground group-hover:text-[var(--color-gold-400)] transition-colors duration-300 text-center mt-3 max-w-[140px] md:max-w-[160px]">
+                      {partner.name}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

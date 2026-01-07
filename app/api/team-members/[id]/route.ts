@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-// app/api/departments/[id]/route.ts
+// app/api/team-members/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { teamMembers, departments } from "@/lib/db/schema";
-import { requireEditor } from "@/lib/auth";
+import { requireEditor, requireAdmin } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -146,7 +146,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireEditor();
+    const user = await requireAdmin();
     const { id } = await params;
     const teamMemberId = parseInt(id);
 
@@ -171,6 +171,7 @@ export async function DELETE(
     revalidatePath("/about");
 
     return NextResponse.json({
+      success: true,
       message: "Team member deleted successfully",
     });
   } catch (error) {

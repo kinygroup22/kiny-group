@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // lib/api/users.ts
 import { db } from "@/lib/db";
-import { users, type User } from "@/lib/db/schema";
+import { blogComments, blogPostLikes, blogPosts, blogPostViews, brandDivisions, users, type User } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
@@ -155,8 +155,28 @@ export async function deleteUser(id: number) {
     throw new Error("User not found");
   }
 
-  // Delete the user
-  await db.delete(users).where(eq(users.id, id));
-  
-  return { success: true };
+  try {
+    // Delete all blog post likes by this user
+    await db.delete(blogPostLikes).where(eq(blogPostLikes.userId, id));
+    
+    // Delete all blog post views by this user
+    await db.delete(blogPostViews).where(eq(blogPostViews.userId, id));
+    
+    // Delete all blog comments by this user
+    await db.delete(blogComments).where(eq(blogComments.authorId, id));
+    
+    // Delete all blog posts by this user
+    await db.delete(blogPosts).where(eq(blogPosts.authorId, id));
+    
+    // Delete all brand divisions by this user
+    await db.delete(brandDivisions).where(eq(brandDivisions.authorId, id));
+    
+    // Finally delete the user
+    await db.delete(users).where(eq(users.id, id));
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    throw error;
+  }
 }

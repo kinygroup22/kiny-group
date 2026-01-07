@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import { departments } from "@/lib/db/schema";
 import { formatDistanceToNow } from "date-fns";
 import { DashboardHeader } from "@/components/dashboard/layout/dashboard-header";
-import { DeleteButton } from "@/components/dashboard/delete-button";
+import { DeleteDepartmentButton } from "@/components/dashboard/departments/delete-department-button";
 
 export default async function DepartmentsPage() {
   const user = await requireEditor();
@@ -107,11 +107,9 @@ export default async function DepartmentsPage() {
                             </Button>
                           </Link>
                           {user.role === "admin" && (
-                            <DeleteButton 
+                            <DeleteDepartmentButton 
                               id={department.id}
-                              resourceType="department"
-                              resourceName={department.name}
-                              confirmMessage="Are you sure you want to delete this department? This will also remove all team members in this department."
+                              name={department.name}
                             />
                           )}
                         </div>

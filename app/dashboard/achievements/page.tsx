@@ -10,8 +10,8 @@ import { achievements } from "@/lib/db/schema";
 import { or, ilike, sql } from "drizzle-orm";
 import { formatDistanceToNow } from "date-fns";
 import { DashboardHeader } from "@/components/dashboard/layout/dashboard-header";
-import { DeleteButton } from "@/components/dashboard/delete-button";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
+import { DeleteAchievementButton } from "@/components/dashboard/achievements/delete-achievement-button";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -190,10 +190,9 @@ export default async function AchievementsPage({
                               </Button>
                             </Link>
                             {user.role === "admin" && (
-                              <DeleteButton 
+                              <DeleteAchievementButton 
                                 id={achievement.id}
-                                resourceType="achievement"
-                                resourceName={achievement.title}
+                                title={achievement.title}
                               />
                             )}
                           </div>

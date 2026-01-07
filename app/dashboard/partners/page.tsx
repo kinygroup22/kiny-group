@@ -10,7 +10,7 @@ import { partners } from "@/lib/db/schema";
 import { ilike, sql } from "drizzle-orm";
 import { formatDistanceToNow } from "date-fns";
 import { DashboardHeader } from "@/components/dashboard/layout/dashboard-header";
-import { DeleteButton } from "@/components/dashboard/delete-button";
+import { DeletePartnerButton } from "@/components/dashboard/partners/delete-partner-button";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
 import Image from "next/image";
 
@@ -175,10 +175,9 @@ export default async function PartnersPage({
                               </Button>
                             </Link>
                             {user.role === "admin" && (
-                              <DeleteButton 
+                              <DeletePartnerButton 
                                 id={partner.id}
-                                resourceType="partner"
-                                resourceName={partner.name}
+                                name={partner.name}
                               />
                             )}
                           </div>
