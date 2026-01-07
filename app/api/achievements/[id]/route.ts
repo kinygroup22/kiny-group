@@ -6,6 +6,7 @@ import { achievements } from "@/lib/db/schema";
 import { requireEditor } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/auth";
 
 // GET: Fetch a single achievement
 export async function GET(
@@ -113,7 +114,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireEditor();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const user = await requireAdmin();
     const { id } = await params;
     const achievementId = parseInt(id);
 
@@ -134,11 +136,9 @@ export async function DELETE(
 
     await db.delete(achievements).where(eq(achievements.id, achievementId));
 
-    revalidatePath("/dashboard/achievements");
-    revalidatePath("/about");
-
-    return NextResponse.json({
-      message: "Achievement deleted successfully",
+    return NextResponse.json({ 
+      success: true, 
+      message: "Achievement deleted successfully" 
     });
   } catch (error) {
     console.error("Error deleting achievement:", error);

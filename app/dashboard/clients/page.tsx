@@ -7,10 +7,10 @@ import { Plus, Edit, Users, Search } from "lucide-react";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { clients } from "@/lib/db/schema";
-import { or, ilike, sql } from "drizzle-orm";
+import { ilike, sql } from "drizzle-orm";
 import { formatDistanceToNow } from "date-fns";
 import { DashboardHeader } from "@/components/dashboard/layout/dashboard-header";
-import { DeleteButton } from "@/components/dashboard/delete-button";
+import { DeleteClientButton } from "@/components/dashboard/clients/delete-client-button";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
 import Image from "next/image";
 
@@ -175,10 +175,9 @@ export default async function ClientsPage({
                               </Button>
                             </Link>
                             {user.role === "admin" && (
-                              <DeleteButton 
+                              <DeleteClientButton 
                                 id={client.id}
-                                resourceType="client"
-                                resourceName={client.name}
+                                name={client.name}
                               />
                             )}
                           </div>

@@ -446,7 +446,7 @@ export default function AboutPage() {
                                 src={exec.image || "/images/placeholder-avatar.jpg"}
                                 alt={exec.name}
                                 fill
-                                className="object-cover"
+                                className="object-cover p-1"
                               />
                             </div>
                             <div className="absolute -bottom-1 -right-1 bg-gradient-to-br from-gold-400 to-gold-600 p-1.5 md:p-2 rounded-full shadow-lg">

@@ -9,7 +9,7 @@ import { teamMembers, departments } from "@/lib/db/schema";
 import { formatDistanceToNow } from "date-fns";
 import { DashboardHeader } from "@/components/dashboard/layout/dashboard-header";
 import { eq } from "drizzle-orm";
-import { DeleteButton } from "@/components/dashboard/delete-button";
+import { DeleteTeamMemberButton } from "@/components/dashboard/team-members/delete-team-member-button";
 import Image from "next/image";
 
 export default async function TeamMembersPage() {
@@ -128,10 +128,9 @@ export default async function TeamMembersPage() {
                             </Button>
                           </Link>
                           {user.role === "admin" && (
-                            <DeleteButton 
+                            <DeleteTeamMemberButton 
                               id={member.id}
-                              resourceType="team-member"
-                              resourceName={member.name}
+                              name={member.name}
                             />
                           )}
                         </div>

@@ -326,7 +326,7 @@ export default function BlogPage() {
       )}
 
       {/* Newsletter Signup */}
-      <div className="mt-12 md:mt-20 rounded-2xl p-6 md:p-8 lg:p-12 bg-linear-to-r from-navy-800 to-navy-900 text-primary-foreground">
+      {/* <div className="mt-12 md:mt-20 rounded-2xl p-6 md:p-8 lg:p-12 bg-linear-to-r from-navy-800 to-navy-900 text-primary-foreground">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-2xl md:text-3xl font-bold mb-4">Tetap Terupdate</h2>
           <p className="text-muted-foreground mb-6 md:mb-8">
@@ -342,7 +342,7 @@ export default function BlogPage() {
             </Button>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

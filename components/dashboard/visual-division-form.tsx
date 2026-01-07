@@ -1085,7 +1085,7 @@ export function VisualDivisionForm({ user, division }: DivisionFormProps) {
                 </div>
 
                 {/* Add New Activity Form */}
-                <Card className="mb-8">
+                <Card className="mb-8 py-6">
                   <CardHeader><CardTitle>Add New Activity</CardTitle></CardHeader>
                   <CardContent className="space-y-4">
                     <div><Label htmlFor="activity-title">Title</Label><Input id="activity-title" value={newActivity.title} onChange={(e) => setNewActivity({ ...newActivity, title: e.target.value })} placeholder="Activity title" /></div>

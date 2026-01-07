@@ -2,12 +2,13 @@
 import {  requireEditor } from "@/lib/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Trash2, Folder } from "lucide-react";
+import { Plus, Edit, Folder } from "lucide-react";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { blogCategories } from "@/lib/db/schema";
 import { formatDistanceToNow } from "date-fns";
 import { DashboardHeader } from "@/components/dashboard/layout/dashboard-header";
+import { DeleteCategoryButton } from "@/components/dashboard/delete-category-button";
 
 export default async function CategoriesPage() {
   const user = await requireEditor();
@@ -89,10 +90,10 @@ export default async function CategoriesPage() {
                             </Button>
                           </Link>
                           {user.role === "admin" && (
-                            <Button variant="outline" size="sm" className="flex items-center gap-1 text-destructive">
-                              <Trash2 className="w-4 h-4" />
-                              Delete
-                            </Button>
+                            <DeleteCategoryButton 
+                              categoryId={category.id} 
+                              categoryName={category.name} 
+                            />
                           )}
                         </div>
                       </td>

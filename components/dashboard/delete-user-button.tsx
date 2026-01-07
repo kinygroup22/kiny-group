@@ -37,8 +37,8 @@ export function DeleteUserButton({ userId, userName }: DeleteUserButtonProps) {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to delete user");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete user");
       }
 
       toast.success("User deleted successfully");
