@@ -10,10 +10,11 @@ import { revalidatePath } from "next/cache";
 // GET: Fetch a single partner
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<Record<string, string>> }
 ) {
   try {
-    const { id } = await params;
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
     const partnerId = parseInt(id);
     
     if (isNaN(partnerId)) {
@@ -43,11 +44,12 @@ export async function GET(
 // PUT: Update a partner
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<Record<string, string>> }
 ) {
   try {
     const user = await requireEditor();
-    const { id } = await params;
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
     const partnerId = parseInt(id);
 
     if (isNaN(partnerId)) {
@@ -116,11 +118,12 @@ export async function PUT(
 // DELETE: Delete a partner
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<Record<string, string>> }
 ) {
   try {
     const user = await requireAdmin();
-    const { id } = await params;
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
     const partnerId = parseInt(id);
 
     if (isNaN(partnerId)) {

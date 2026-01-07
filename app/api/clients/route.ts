@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 // app/api/clients/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
@@ -10,10 +9,11 @@ import { revalidatePath } from "next/cache";
 // GET: Fetch a single client
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<Record<string, string>> }
 ) {
   try {
-    const { id } = await params;
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
     const clientId = parseInt(id);
     
     if (isNaN(clientId)) {
@@ -43,11 +43,12 @@ export async function GET(
 // PUT: Update a client
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<Record<string, string>> }
 ) {
   try {
-    const user = await requireEditor();
-    const { id } = await params;
+    await requireEditor();
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
     const clientId = parseInt(id);
 
     if (isNaN(clientId)) {
@@ -116,11 +117,12 @@ export async function PUT(
 // DELETE: Delete a client
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<Record<string, string>> }
 ) {
   try {
-    const user = await requireAdmin();
-    const { id } = await params;
+    await requireAdmin();
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
     const clientId = parseInt(id);
 
     if (isNaN(clientId)) {
