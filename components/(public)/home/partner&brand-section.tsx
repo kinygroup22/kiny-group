@@ -114,7 +114,7 @@ export default function PartnersAndClientsSection() {
                     
                     .scroll-container-clients {
                       display: flex;
-                      animation: scroll-clients 35s linear infinite;
+                      animation: scroll-clients 120s linear infinite;
                       width: fit-content;
                     }
                     
@@ -124,13 +124,7 @@ export default function PartnersAndClientsSection() {
                     
                     @media (max-width: 768px) {
                       .scroll-container-clients {
-                        animation-duration: 25s;
-                      }
-                    }
-                    
-                    @media (min-width: 1920px) {
-                      .scroll-container-clients {
-                        animation-duration: 45s;
+                        animation-duration: 80s;
                       }
                     }
                   `}</style>
