@@ -2,15 +2,18 @@
 // app/dashboard/posts/page.tsx
 import { requireContributor } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { 
   Eye, 
   Heart, 
   MessageCircle, 
   TrendingUp,
   FileText,
+  Plus,
 } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/layout/dashboard-header";
 import PostsTableClient from "@/components/dashboard/posts/PostsTableClient";
+import Link from "next/link";
 
 // Server component to fetch data
 async function getPostsData(user: any) {
@@ -84,6 +87,12 @@ export default async function PostsPage() {
           description="Create, edit and manage your blog posts"
           icon={FileText}
         />
+        <Link href="/dashboard/posts/new">
+          <Button className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            New Post
+          </Button>
+        </Link>
       </div>
 
       {/* Statistics Cards */}
