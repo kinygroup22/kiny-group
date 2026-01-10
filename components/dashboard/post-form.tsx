@@ -20,7 +20,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Save, Eye, AlertCircle, Upload, X, Image } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { 
+  Loader2, 
+  Save, 
+  Eye, 
+  AlertCircle, 
+  Upload, 
+  X, 
+  Image,
+  Calendar,
+  User as UserIcon,
+  MessageCircle,
+  Heart,
+  Share2,
+  Clock,
+  Tag,
+  TrendingUp,
+  Bookmark,
+  Facebook,
+  Twitter,
+  Linkedin,
+  Link2
+} from "lucide-react";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 interface PostFormProps {
@@ -119,9 +142,9 @@ export function PostForm({ user, post }: PostFormProps) {
     setUploadProgress(0);
     setError("");
     
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('folder', 'blog-featured-images');
+    const uploadFormData = new FormData();
+    uploadFormData.append('file', file);
+    uploadFormData.append('folder', 'blog-featured-images');
     
     try {
       // Create a new XMLHttpRequest to track progress
@@ -156,7 +179,7 @@ export function PostForm({ user, post }: PostFormProps) {
       
       // Open and send request
       xhr.open('POST', '/api/upload');
-      xhr.send(formData);
+      xhr.send(uploadFormData);
     } catch (err) {
       setError("Failed to upload image. Please try again.");
       setUploadingImage(false);
@@ -474,56 +497,348 @@ export function PostForm({ user, post }: PostFormProps) {
         </TabsContent>
 
         <TabsContent value="preview" className="space-y-6 mt-6">
-          <Card className="py-6">
-            <CardHeader>
-              <CardTitle>Post Preview</CardTitle>
-              <CardDescription>See how your post will appear</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {formData.featuredImage && (
-                <div className="rounded-lg overflow-hidden border">
-                  <img
-                    src={formData.featuredImage}
-                    alt={formData.title}
-                    className="w-full h-64 object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
-                  />
+          <div className="min-h-screen bg-linear-to-b from-background via-background to-muted/20">
+            {/* Hero Section */}
+            <div className="relative h-[60vh] min-h-96 overflow-hidden rounded-lg">
+              {formData.featuredImage ? (
+                <img
+                  src={formData.featuredImage}
+                  alt={formData.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
+                  <Image className="h-16 w-16 text-gray-400" />
                 </div>
               )}
+              <div className="absolute inset-0 bg-linear-to-t from-black via-black/70 to-transparent" />
               
-              <div className="space-y-3">
-                <h1 className="text-4xl font-bold tracking-tight">
-                  {formData.title || "Untitled Post"}
-                </h1>
-                
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              <div className="absolute inset-0 container mx-auto px-4 flex items-end pb-12">
+                <div className="max-w-4xl">
                   {formData.category && (
-                    <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                    <Badge className="mb-4 bg-primary hover:bg-primary/90 text-primary-foreground border-0 shadow-lg text-sm px-4 py-1">
                       {categories.find(c => c.slug === formData.category)?.name || formData.category}
-                    </span>
+                    </Badge>
                   )}
-                  <span>{formData.readTime} min read</span>
+                  
+                  <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight drop-shadow-2xl">
+                    {formData.title || "Untitled Post"}
+                  </h1>
+                  
+                  <div className="flex flex-wrap items-center gap-4 md:gap-6 text-white/90">
+                    <div className="flex items-center gap-2">
+                      {user.image ? (
+                        <img 
+                          src={user.image} 
+                          alt={user.name || "Author"}
+                          width={32}
+                          height={32}
+                          className="rounded-full border-2 border-white/50"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center border-2 border-white/50">
+                          <UserIcon className="h-4 w-4 text-white" />
+                        </div>
+                      )}
+                      <span className="font-medium">{user.name || "Author"}</span>
+                    </div>
+                    <Separator orientation="vertical" className="h-4 bg-white/30" />
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="h-4 w-4" />
+                      {new Date().toLocaleDateString('en-US', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                      })}
+                    </div>
+                    <Separator orientation="vertical" className="h-4 bg-white/30" />
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="h-4 w-4" />
+                      {formData.readTime} min read
+                    </div>
+                    <Separator orientation="vertical" className="h-4 bg-white/30" />
+                    <div className="flex items-center gap-1.5">
+                      <Eye className="h-4 w-4" />
+                      0 views
+                    </div>
+                  </div>
                 </div>
-
-                {formData.excerpt && (
-                  <p className="text-lg text-muted-foreground leading-relaxed">
-                    {formData.excerpt}
-                  </p>
-                )}
               </div>
+            </div>
 
-              <div className="border-t pt-6">
-                <div 
-                  className="prose prose-sm max-w-none dark:prose-invert"
-                  dangerouslySetInnerHTML={{ 
-                    __html: formData.content || "<p class='text-muted-foreground'>No content yet...</p>" 
-                  }}
-                />
+            <div className="container mx-auto px-4 pb-10 -mt-12 relative z-10">
+              <div className="max-w-4xl mx-auto">
+                {/* Main Content Card */}
+                <Card className="border-0 shadow-2xl overflow-hidden mb-8">
+                  {formData.excerpt && (
+                    <CardHeader className="bg-linear-to-r from-primary/10 to-accent/10 dark:from-primary/20 dark:to-accent/20 border-b py-6">
+                      <p className="text-lg md:text-xl text-muted-foreground italic border-l-4 border-primary pl-6 py-3 leading-relaxed">
+                        {formData.excerpt}
+                      </p>
+                    </CardHeader>
+                  )}
+
+                  <CardContent className="p-6 md:p-10 space-y-8">
+                    {/* Floating Action Bar */}
+                    <div className="sticky top-4 float-right ml-4 mb-4 flex flex-col gap-2 z-20">
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="shadow-lg bg-background"
+                        title="Like"
+                      >
+                        <Heart className="h-4 w-4" />
+                      </Button>
+                      
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="shadow-lg bg-background"
+                        title="Bookmark"
+                      >
+                        <Bookmark className="h-4 w-4" />
+                      </Button>
+                      
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="shadow-lg bg-background"
+                        title="Share"
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    {/* Rich Text Content - Using custom styles matching the rich text editor */}
+                    <div 
+                      className="rich-text-content min-h-75 p-4 focus:outline-none max-w-none"
+                      dangerouslySetInnerHTML={{ 
+                        __html: formData.content || "<p class='text-muted-foreground'>No content yet...</p>" 
+                      }} 
+                    />
+
+                    {/* Tags */}
+                    {formData.category && (
+                      <div className="pt-8 border-t border-border">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Tag className="h-5 w-5 text-primary" />
+                          <span className="text-sm font-semibold text-foreground">Tags:</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Badge 
+                            variant="outline" 
+                            className="bg-primary/10 hover:bg-primary/20 dark:bg-primary/20 dark:hover:bg-primary/30 border-primary/30 dark:border-primary/50 text-primary dark:text-primary/80 px-3 py-1 text-sm transition-colors cursor-pointer"
+                          >
+                            #{categories.find(c => c.slug === formData.category)?.name || formData.category}
+                          </Badge>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Stats & Actions */}
+                    <div className="pt-8 border-t border-border">
+                      <div className="flex flex-wrap items-center justify-between gap-6">
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="lg"
+                              className="border-2 border-primary/30 dark:border-primary/50 hover:bg-primary/10 dark:hover:bg-primary/20"
+                            >
+                              <Heart className="mr-2 h-5 w-5" />
+                              <span className="font-semibold">0</span>
+                            </Button>
+                            
+                            <Button 
+                              variant="outline" 
+                              size="lg"
+                              className="border-2 border-border hover:bg-muted"
+                            >
+                              <MessageCircle className="mr-2 h-5 w-5" />
+                              <span className="font-semibold">0</span>
+                            </Button>
+
+                            <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg border">
+                              <TrendingUp className="h-5 w-5 text-muted-foreground" />
+                              <span className="font-semibold text-sm">0</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-muted-foreground mr-2">Share:</span>
+                          <Button 
+                            variant="outline" 
+                            size="icon"
+                            className="hover:bg-blue-50 hover:border-blue-500 dark:hover:bg-blue-950/20"
+                          >
+                            <Facebook className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="icon"
+                            className="hover:bg-sky-50 hover:border-sky-500 dark:hover:bg-sky-950/20"
+                          >
+                            <Twitter className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="icon"
+                            className="hover:bg-blue-50 hover:border-blue-700 dark:hover:bg-blue-950/20"
+                          >
+                            <Linkedin className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="icon"
+                            className="hover:bg-primary/10 hover:border-primary dark:hover:bg-primary/20"
+                          >
+                            <Share2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            
+            {/* Custom styles to match the rich text editor */}
+            <style jsx global>{`
+              .rich-text-content {
+                color: hsl(var(--foreground));
+                background-color: hsl(var(--background));
+                min-height: 300px;
+              }
+              
+              .rich-text-content:focus {
+                outline: none;
+              }
+              
+              .rich-text-content h1 {
+                font-size: 2em;
+                font-weight: bold;
+                margin: 0.67em 0;
+                color: hsl(var(--foreground));
+              }
+              
+              .rich-text-content h2 {
+                font-size: 1.5em;
+                font-weight: bold;
+                margin: 0.75em 0;
+                color: hsl(var(--foreground));
+                border-bottom: 1px solid hsl(var(--border));
+                padding-bottom: 0.5em;
+              }
+              
+              .rich-text-content h3 {
+                font-size: 1.17em;
+                font-weight: bold;
+                margin: 0.83em 0;
+                color: hsl(var(--foreground));
+              }
+              
+              .rich-text-content p {
+                margin: 1rem 0;
+                line-height: 1.5;
+                color: hsl(var(--muted-foreground));
+              }
+              
+              .rich-text-content blockquote {
+                border-left: 4px solid hsl(var(--primary));
+                padding-left: 1rem;
+                margin: 1rem 0;
+                color: hsl(var(--muted-foreground));
+                background-color: hsl(var(--muted) / 0.5);
+                padding: 1rem;
+                border-radius: 0.375rem;
+              }
+              
+              .rich-text-content pre {
+                background-color: hsl(var(--muted));
+                padding: 1rem;
+                border-radius: 0.375rem;
+                overflow-x: auto;
+                font-family: monospace;
+                color: hsl(var(--foreground));
+                border: 1px solid hsl(var(--border));
+              }
+              
+              .rich-text-content ul,
+              .rich-text-content ol {
+                padding-left: 2rem;
+                margin: 1rem 0;
+                color: hsl(var(--muted-foreground));
+                list-style-position: outside;
+              }
+              
+              .rich-text-content ul {
+                list-style-type: disc;
+              }
+              
+              .rich-text-content ol {
+                list-style-type: decimal;
+              }
+              
+              .rich-text-content li {
+                margin: 0.5rem 0;
+                display: list-item;
+              }
+              
+              .rich-text-content a {
+                color: hsl(var(--primary));
+                text-decoration: underline;
+                font-weight: 500;
+              }
+              
+              .rich-text-content a:hover {
+                color: hsl(var(--primary) / 0.8);
+              }
+              
+              .rich-text-content img {
+                max-width: 100%;
+                height: auto;
+                display: block;
+                margin: 1rem 0;
+                border-radius: 0.375rem;
+                border: 1px solid hsl(var(--border));
+              }
+              
+              .rich-text-content code {
+                color: hsl(var(--primary));
+                background-color: hsl(var(--muted) / 0.5);
+                padding: 0.125rem 0.375rem;
+                border-radius: 0.25rem;
+                font-family: monospace;
+                font-size: 0.875em;
+              }
+              
+              .rich-text-content table {
+                border-collapse: collapse;
+                width: 100%;
+                margin: 1rem 0;
+              }
+              
+              .rich-text-content th {
+                background-color: hsl(var(--muted));
+                padding: 0.75rem;
+                text-align: left;
+                font-weight: 600;
+                border: 1px solid hsl(var(--border));
+              }
+              
+              .rich-text-content td {
+                padding: 0.75rem;
+                border: 1px solid hsl(var(--border));
+              }
+              
+              .rich-text-content hr {
+                border: none;
+                border-top: 1px solid hsl(var(--border));
+                margin: 2rem 0;
+              }
+            `}</style>
+          </div>
         </TabsContent>
       </Tabs>
 
