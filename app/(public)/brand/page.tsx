@@ -291,7 +291,7 @@ export default function BrandPage() {
                         
                         {/* CTA Button */}
                         <Link
-                          href={`/brand/${brand.id}`}
+                          href={`/brand/${brand.slug}`}
                           className="group inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 rounded-full font-bold transition-all duration-300 hover:shadow-2xl hover:scale-105 text-xs sm:text-sm md:text-base text-white shadow-xl"
                           style={{ backgroundColor: theme.primary }}
                           onClick={(e) => e.stopPropagation()}

@@ -15,15 +15,15 @@ import { getThemeColors, createThemeCSSVariables } from "@/lib/theme-utils";
 import { ActivitiesSection } from "@/components/(public)/brand/ActivitiesSection";
 
 // Template functions for email and WhatsApp
-const createEmailTemplate = (brandName: string) => {
+const createEmailTemplate = (brandName: string, email: string) => {
   const subject = encodeURIComponent(`Inquiry about ${brandName}`);
   const body = encodeURIComponent(`Hello,
 
-I'm interested in learning more about ${brandName}. Could you please provide me with additional information?
+  I'm interested in learning more about ${brandName}. Could you please provide me with additional information?
 
-Thank you,
-[Your Name]`);
-  return `mailto:${subject}&body=${body}`;
+  Thank you,
+  [Your Name]`);
+    return `mailto:${email}?subject=${subject}&body=${body}`;
 };
 
 const createWhatsAppTemplate = (brandName: string) => {
@@ -98,7 +98,7 @@ export default function DivisionDetailPage() {
   const theme = getThemeColors(division);
 
   // Generate email and WhatsApp templates with the brand name
-  const emailTemplate = createEmailTemplate(division.name);
+  const emailTemplate = createEmailTemplate(division.name, division.email || "info@kcifoundation.org");
   const whatsAppTemplate = createWhatsAppTemplate(division.name);
 
   return (
@@ -349,10 +349,17 @@ export default function DivisionDetailPage() {
                 </p>
 
                 <Button 
+                  asChild
                   className="text-white px-8 py-6 text-lg border-0 hover:opacity-90 shadow-xl"
                   style={{ backgroundColor: theme.primary }}
                 >
-                  {division.buttonText || "Schedule Consultation"}
+                  <a 
+                    href={`${whatsAppTemplate}${(division.whatsapp || "+628123456789").replace(/[^\d+]/g, '')}?text=${encodeURIComponent(`Hello, I would like to ask about "${division.name}"`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {division.buttonText}
+                  </a>
                 </Button>
               </div>
 
@@ -364,7 +371,7 @@ export default function DivisionDetailPage() {
                       Email
                     </p>
                     <a 
-                      href={`${emailTemplate}${division.email || "info@kcifoundation.org"}`}
+                      href={emailTemplate}
                       className="text-lg font-medium hover:underline"
                     >
                       {division.email || "info@kcifoundation.org"}
