@@ -95,8 +95,7 @@ export const brandDivisions = pgTable("brand_divisions", {
   tagline: varchar("tagline", { length: 255 }),
   description: text("description").notNull(),
   fullDescription: text("full_description").notNull(),
-  coverage: varchar("coverage", { length: 255 }),
-  delivery: varchar("delivery", { length: 255 }),
+  // Removed coverage and delivery fields
   backgroundImage: varchar("background_image", { length: 500 }),
   logo: varchar("logo", { length: 500 }),
   color: varchar("color", { length: 20 }),
@@ -154,6 +153,14 @@ export const brandDivisions = pgTable("brand_divisions", {
     gradient: '',
   }),
   featured: boolean("featured").default(false),
+  // New contact information fields
+  email: varchar("email", { length: 255 }).default("info@kcifoundation.org"),
+  whatsapp: varchar("whatsapp", { length: 50 }).default("+628123456789"),
+  address: text("address").default("Jl. Tebet Timur Dalam II No.38B, Tebet,\nJakarta Selatan 12820"),
+  contactTitle: varchar("contact_title", { length: 255 }).default("Let's Connect"),
+  contactSubtitle: varchar("contact_subtitle", { length: 255 }).default("Get in Touch"),
+  contactDescription: text("contact_description").default("Ready to start your journey with us? Our team is here to answer your questions and help you get started."),
+  buttonText: varchar("button_text", { length: 255 }).default("Schedule Consultation"),
   authorId: integer("author_id")
     .references(() => users.id)
     .notNull(),

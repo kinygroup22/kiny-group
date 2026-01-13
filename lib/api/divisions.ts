@@ -1,4 +1,4 @@
-// lib/api/divisions.ts - Updated getDivisionBySlug
+// lib/api/divisions.ts - Updated with contact information fields
 import { db } from "@/lib/db";
 import { brandDivisions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -37,8 +37,6 @@ export async function createDivision(data: {
   tagline?: string;
   description: string;
   fullDescription: string;
-  coverage?: string;
-  delivery?: string;
   backgroundImage?: string;
   logo?: string;
   color?: string;
@@ -72,6 +70,14 @@ export async function createDivision(data: {
     gradient: string;
   };
   featured?: boolean;
+  // New contact information fields
+  email?: string;
+  whatsapp?: string;
+  address?: string;
+  contactTitle?: string;
+  contactSubtitle?: string;
+  contactDescription?: string;
+  buttonText?: string;
 }) {
   const user = await getCurrentUser();
   if (!user) {
@@ -86,8 +92,6 @@ export async function createDivision(data: {
       tagline: data.tagline,
       description: data.description,
       fullDescription: data.fullDescription,
-      coverage: data.coverage,
-      delivery: data.delivery,
       backgroundImage: data.backgroundImage,
       logo: data.logo,
       color: data.color,
@@ -115,6 +119,14 @@ export async function createDivision(data: {
         gradient: '',
       },
       featured: data.featured || false,
+      // New contact information fields
+      email: data.email || "info@kcifoundation.org",
+      whatsapp: data.whatsapp || "+628123456789",
+      address: data.address || "Jl. Tebet Timur Dalam II No.38B, Tebet,\nJakarta Selatan 12820",
+      contactTitle: data.contactTitle || "Let's Connect",
+      contactSubtitle: data.contactSubtitle || "Get in Touch",
+      contactDescription: data.contactDescription || "Ready to start your journey with us? Our team is here to answer your questions and help you get started.",
+      buttonText: data.buttonText || "Schedule Consultation",
       authorId: user.id,
     })
     .returning();
@@ -130,8 +142,6 @@ export async function updateDivision(
     tagline?: string;
     description?: string;
     fullDescription?: string;
-    coverage?: string;
-    delivery?: string;
     backgroundImage?: string;
     logo?: string;
     color?: string;
@@ -165,6 +175,14 @@ export async function updateDivision(
       gradient: string;
     };
     featured?: boolean;
+    // New contact information fields
+    email?: string;
+    whatsapp?: string;
+    address?: string;
+    contactTitle?: string;
+    contactSubtitle?: string;
+    contactDescription?: string;
+    buttonText?: string;
   }
 ) {
   const user = await getCurrentUser();

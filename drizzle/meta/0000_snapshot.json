@@ -1,5 +1,5 @@
 {
-  "id": "b2570dcd-914d-4c31-8e1f-49bbc93c7d26",
+  "id": "ad957e18-0994-4cd2-acd6-b06de35b6f44",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -761,18 +761,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "coverage": {
-          "name": "coverage",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "delivery": {
-          "name": "delivery",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false
-        },
         "background_image": {
           "name": "background_image",
           "type": "varchar(500)",
@@ -832,6 +820,55 @@
           "primaryKey": false,
           "notNull": false,
           "default": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'info@kcifoundation.org'"
+        },
+        "whatsapp": {
+          "name": "whatsapp",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'+628123456789'"
+        },
+        "address": {
+          "name": "address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'Jl. Tebet Timur Dalam II No.38B, Tebet,\nJakarta Selatan 12820'"
+        },
+        "contact_title": {
+          "name": "contact_title",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'Let''s Connect'"
+        },
+        "contact_subtitle": {
+          "name": "contact_subtitle",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'Get in Touch'"
+        },
+        "contact_description": {
+          "name": "contact_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'Ready to start your journey with us? Our team is here to answer your questions and help you get started.'"
+        },
+        "button_text": {
+          "name": "button_text",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'Schedule Consultation'"
         },
         "author_id": {
           "name": "author_id",
@@ -1030,6 +1067,58 @@
         },
         "image_url": {
           "name": "image_url",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order": {
+          "name": "order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.partners": {
+      "name": "partners",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "logo_url": {
+          "name": "logo_url",
           "type": "varchar(500)",
           "primaryKey": false,
           "notNull": true

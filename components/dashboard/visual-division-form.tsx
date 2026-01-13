@@ -169,8 +169,7 @@ export function VisualDivisionForm({ user, division }: DivisionFormProps) {
     tagline: division?.tagline || "",
     description: division?.description || "",
     fullDescription: division?.fullDescription || "",
-    coverage: division?.coverage || "",
-    delivery: division?.delivery || "",
+    // Removed coverage and delivery fields
     backgroundImage: division?.backgroundImage || "",
     logo: division?.logo || "",
     color: division?.color || "#3b82f6",
@@ -189,6 +188,14 @@ export function VisualDivisionForm({ user, division }: DivisionFormProps) {
     achievements: division?.achievements || [],
     team: division?.team || [],
     theme: getInitialTheme(),
+    // Added contact information fields
+    email: division?.email || "info@kcifoundation.org",
+    whatsapp: division?.whatsapp || "+628123456789",
+    address: division?.address || "Jl. Tebet Timur Dalam II No.38B, Tebet,\nJakarta Selatan 12820",
+    contactTitle: division?.contactTitle || "Let's Connect",
+    contactSubtitle: division?.contactSubtitle || "Get in Touch",
+    contactDescription: division?.contactDescription || "Ready to start your journey with us? Our team is here to answer your questions and help you get started.",
+    buttonText: division?.buttonText || "Schedule Consultation",
   });
 
   // --- NEW ACTIVITY FETCH EFFECT ---
@@ -579,48 +586,6 @@ export function VisualDivisionForm({ user, division }: DivisionFormProps) {
             </div>
           </section>
 
-          {/* Coverage & Delivery */}
-          <section className="py-20 border-b border-border/50">
-            <div className="container mx-auto px-6 lg:px-12">
-              <div className="max-w-6xl mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-                  <div>
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: theme.primary }}>
-                        <MapPin className="h-7 w-7 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                          Geographic Coverage
-                        </p>
-                        <p className="text-2xl md:text-3xl font-bold">{formData.coverage}</p>
-                      </div>
-                    </div>
-                    <p className="text-muted-foreground leading-relaxed">
-                      Our extensive network spans across continents, ensuring we can deliver exceptional service wherever you need us.
-                    </p>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: theme.primary }}>
-                        <Truck className="h-7 w-7 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                          Service Delivery
-                        </p>
-                        <p className="text-2xl md:text-3xl font-bold">{formData.delivery}</p>
-                      </div>
-                    </div>
-                    <p className="text-muted-foreground leading-relaxed">
-                      We offer flexible delivery options tailored to your preferences, combining modern technology with personal touch.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
           {/* Services */}
           <section className="py-20 bg-muted/30">
             <div className="container mx-auto px-6 lg:px-12">
@@ -789,25 +754,25 @@ export function VisualDivisionForm({ user, division }: DivisionFormProps) {
             </div>
           </section>
 
-          {/* Contact Section */}
+          {/* Contact Section - Updated with clickable email and WhatsApp */}
           <section className="py-24">
             <div className="container mx-auto px-6 lg:px-12">
               <div className="max-w-6xl mx-auto">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                   <div>
                     <p className="text-sm font-bold tracking-[0.3em] uppercase mb-4" style={{ color: theme.text }}>
-                      Let&apos;s Connect
+                      {formData.contactTitle}
                     </p>
-                    <h2 className="text-4xl md:text-5xl font-bold mb-6">Get in Touch</h2>
+                    <h2 className="text-4xl md:text-5xl font-bold mb-6">{formData.contactSubtitle}</h2>
                     <p className="text-xl text-muted-foreground leading-relaxed mb-12">
-                      Ready to start your journey with us? Our team is here to answer your questions and help you get started.
+                      {formData.contactDescription}
                     </p>
 
                     <Button 
                       className="text-white px-8 py-6 text-lg border-0 hover:opacity-90 shadow-xl"
                       style={{ backgroundColor: theme.primary }}
                     >
-                      Schedule Consultation
+                      {formData.buttonText}
                     </Button>
                   </div>
 
@@ -818,9 +783,12 @@ export function VisualDivisionForm({ user, division }: DivisionFormProps) {
                         <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                           Email
                         </p>
-                        <p className="text-lg font-medium">
-                          info@kcifoundation.org
-                        </p>
+                        <a 
+                          href={`mailto:${formData.email}`}
+                          className="text-lg font-medium hover:underline"
+                        >
+                          {formData.email}
+                        </a>
                       </div>
                     </div>
 
@@ -828,9 +796,16 @@ export function VisualDivisionForm({ user, division }: DivisionFormProps) {
                       <Phone className="h-6 w-6 mt-1 shrink-0" style={{ color: theme.text }} />
                       <div>
                         <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                          Phone
+                          WhatsApp
                         </p>
-                        <p className="text-lg font-medium">+62 21 83787735</p>
+                        <a 
+                          href={`https://wa.me/${formData.whatsapp.replace(/[^\d+]/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-lg font-medium hover:underline"
+                        >
+                          {formData.whatsapp}
+                        </a>
                       </div>
                     </div>
 
@@ -840,9 +815,8 @@ export function VisualDivisionForm({ user, division }: DivisionFormProps) {
                         <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                           Address
                         </p>
-                        <p className="text-lg font-medium leading-relaxed">
-                          Jl. Tebet Timur Dalam II No.38B, Tebet,<br />
-                          Jakarta Selatan 12820
+                        <p className="text-lg font-medium leading-relaxed whitespace-pre-line">
+                          {formData.address}
                         </p>
                       </div>
                     </div>
@@ -956,58 +930,6 @@ export function VisualDivisionForm({ user, division }: DivisionFormProps) {
                     />
                   </div>
                 ))}
-              </div>
-            </div>
-          </section>
-
-          {/* Coverage & Delivery */}
-          <section className="py-20 border-b border-border/50">
-            <div className="container mx-auto px-6 lg:px-12">
-              <div className="max-w-6xl mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-                  <div>
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: theme.primary }}>
-                        <MapPin className="h-7 w-7 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                          Geographic Coverage
-                        </p>
-                        <EditableField
-                          value={formData.coverage}
-                          onChange={(value) => setFormData(prev => ({ ...prev, coverage: value }))}
-                          className="text-2xl md:text-3xl font-bold"
-                          placeholder="Enter coverage area"
-                        />
-                      </div>
-                    </div>
-                    <p className="text-muted-foreground leading-relaxed">
-                      Our extensive network spans across continents, ensuring we can deliver exceptional service wherever you need us.
-                    </p>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: theme.primary }}>
-                        <Truck className="h-7 w-7 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                          Service Delivery
-                        </p>
-                        <EditableField
-                          value={formData.delivery}
-                          onChange={(value) => setFormData(prev => ({ ...prev, delivery: value }))}
-                          className="text-2xl md:text-3xl font-bold"
-                          placeholder="Enter delivery time"
-                        />
-                      </div>
-                    </div>
-                    <p className="text-muted-foreground leading-relaxed">
-                      We offer flexible delivery options tailored to your preferences, combining modern technology with personal touch.
-                    </p>
-                  </div>
-                </div>
               </div>
             </div>
           </section>
@@ -1221,6 +1143,129 @@ export function VisualDivisionForm({ user, division }: DivisionFormProps) {
                       <Plus className="w-4 h-4 mr-2" />
                       Add Member
                     </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Quick Facts */}
+          <section className="py-20 border-b border-border/50">
+            <div className="container mx-auto px-6 lg:px-12">
+              <div className="max-w-6xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                  <div className="flex items-center justify-between py-6 border-b-2 border-border/50">
+                    <div className="flex items-center gap-3">
+                      <Star className="h-6 w-6" style={{ color: theme.text }} />
+                      <span className="font-semibold text-lg">Industry Rating</span>
+                    </div>
+                    <div className="flex gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="h-5 w-5" style={{ color: theme.text }} fill="currentColor" />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between py-6 border-b-2 border-border/50">
+                    <div className="flex items-center gap-3">
+                      <TrendingUp className="h-6 w-6" style={{ color: theme.text }} />
+                      <span className="font-semibold text-lg">Response Time</span>
+                    </div>
+                    <span className="font-bold text-2xl" style={{ color: theme.text }}>24hrs</span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-6 border-b-2 border-border/50">
+                    <div className="flex items-center gap-3">
+                      <Award className="h-6 w-6" style={{ color: theme.text }} />
+                      <span className="font-semibold text-lg">Client Retention</span>
+                    </div>
+                    <span className="font-bold text-2xl" style={{ color: theme.text }}>95%+</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Contact Section - Updated with editable fields */}
+          <section className="py-24">
+            <div className="container mx-auto px-6 lg:px-12">
+              <div className="max-w-6xl mx-auto">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                  <div>
+                    <EditableField
+                      value={formData.contactTitle}
+                      onChange={(value) => setFormData(prev => ({ ...prev, contactTitle: value }))}
+                      className="text-sm font-bold tracking-[0.3em] uppercase mb-4"
+                      style={{ color: theme.text }}
+                      placeholder="Contact title"
+                    />
+                    <EditableField
+                      value={formData.contactSubtitle}
+                      onChange={(value) => setFormData(prev => ({ ...prev, contactSubtitle: value }))}
+                      className="text-4xl md:text-5xl font-bold mb-6"
+                      placeholder="Contact subtitle"
+                    />
+                    <EditableTextarea
+                      value={formData.contactDescription}
+                      onChange={(value) => setFormData(prev => ({ ...prev, contactDescription: value }))}
+                      className="text-xl text-muted-foreground leading-relaxed mb-12"
+                      placeholder="Contact description"
+                    />
+
+                    <EditableField
+                      value={formData.buttonText}
+                      onChange={(value) => setFormData(prev => ({ ...prev, buttonText: value }))}
+                      className="text-white px-8 py-6 text-lg border-0 hover:opacity-90 shadow-xl inline-block"
+                      style={{ backgroundColor: theme.primary }}
+                      placeholder="Button text"
+                    />
+                  </div>
+
+                  <div className="space-y-8">
+                    <div className="flex items-start gap-4 py-6 border-b border-border/50">
+                      <Mail className="h-6 w-6 mt-1 shrink-0" style={{ color: theme.text }} />
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                          Email
+                        </p>
+                        <EditableField
+                          value={formData.email}
+                          onChange={(value) => setFormData(prev => ({ ...prev, email: value }))}
+                          className="text-lg font-medium"
+                          placeholder="Email address"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-4 py-6 border-b border-border/50">
+                      <Phone className="h-6 w-6 mt-1 shrink-0" style={{ color: theme.text }} />
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                          WhatsApp
+                        </p>
+                        <EditableField
+                          value={formData.whatsapp}
+                          onChange={(value) => setFormData(prev => ({ ...prev, whatsapp: value }))}
+                          className="text-lg font-medium"
+                          placeholder="WhatsApp number"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-4 py-6 border-b border-border/50">
+                      <MapPinIcon className="h-6 w-6 mt-1 shrink-0" style={{ color: theme.text }} />
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                          Address
+                        </p>
+                        <EditableTextarea
+                          value={formData.address}
+                          onChange={(value) => setFormData(prev => ({ ...prev, address: value }))}
+                          className="text-lg font-medium leading-relaxed"
+                          placeholder="Address"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

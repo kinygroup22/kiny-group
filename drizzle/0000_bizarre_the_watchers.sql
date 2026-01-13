@@ -102,8 +102,6 @@ CREATE TABLE "brand_divisions" (
 	"tagline" varchar(255),
 	"description" text NOT NULL,
 	"full_description" text NOT NULL,
-	"coverage" varchar(255),
-	"delivery" varchar(255),
 	"background_image" varchar(500),
 	"logo" varchar(500),
 	"color" varchar(20),
@@ -113,6 +111,14 @@ CREATE TABLE "brand_divisions" (
 	"team" jsonb DEFAULT '[]'::jsonb NOT NULL,
 	"theme" jsonb DEFAULT '{"primary":"","bg":"","bgSolid":"","border":"","text":"","accent":"","hover":"","gradient":""}'::jsonb NOT NULL,
 	"featured" boolean DEFAULT false,
+	"email" varchar(255) DEFAULT 'info@kcifoundation.org',
+	"whatsapp" varchar(50) DEFAULT '+628123456789',
+	"address" text DEFAULT 'Jl. Tebet Timur Dalam II No.38B, Tebet,
+Jakarta Selatan 12820',
+	"contact_title" varchar(255) DEFAULT 'Let''s Connect',
+	"contact_subtitle" varchar(255) DEFAULT 'Get in Touch',
+	"contact_description" text DEFAULT 'Ready to start your journey with us? Our team is here to answer your questions and help you get started.',
+	"button_text" varchar(255) DEFAULT 'Schedule Consultation',
 	"author_id" integer NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
@@ -145,6 +151,15 @@ CREATE TABLE "journey_items" (
 	"title" varchar(500) NOT NULL,
 	"description" text NOT NULL,
 	"image_url" varchar(500) NOT NULL,
+	"order" integer DEFAULT 0,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "partners" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"name" varchar(255) NOT NULL,
+	"logo_url" varchar(500) NOT NULL,
 	"order" integer DEFAULT 0,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
