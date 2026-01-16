@@ -3,15 +3,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { blogPosts } from "@/lib/db/schema";
 import { requireContributor } from "@/lib/auth";
-import { eq, ilike, and, or, isNull, isNotNull } from "drizzle-orm";
+import { eq, ilike, and, isNull, isNotNull, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export async function POST(request: NextRequest) {
   try {
-    // Check if user has permission to create posts
     const user = await requireContributor();
-
     const body = await request.json();
+
     const {
       title,
       slug,
@@ -22,6 +21,13 @@ export async function POST(request: NextRequest) {
       category,
       readTime = 5,
       published = false,
+      isEvent = false,
+      // Event fields
+      eventStartDate,
+      eventEndDate,
+      eventLocation,
+      eventMaxParticipants,
+      eventRegistrationForm,
     } = body;
 
     // Validate required fields
@@ -30,6 +36,46 @@ export async function POST(request: NextRequest) {
         { error: "Title, slug, and content are required." },
         { status: 400 }
       );
+    }
+
+    // Validate event fields if isEvent is true
+    if (isEvent) {
+      if (!eventStartDate) {
+        return NextResponse.json(
+          { error: "Event start date is required for events." },
+          { status: 400 }
+        );
+      }
+      if (!eventEndDate) {
+        return NextResponse.json(
+          { error: "Event end date is required for events." },
+          { status: 400 }
+        );
+      }
+      
+      const startDate = new Date(eventStartDate);
+      const endDate = new Date(eventEndDate);
+      
+      if (endDate <= startDate) {
+        return NextResponse.json(
+          { error: "Event end date must be after start date." },
+          { status: 400 }
+        );
+      }
+      
+      if (startDate < new Date()) {
+        return NextResponse.json(
+          { error: "Event start date cannot be in the past." },
+          { status: 400 }
+        );
+      }
+      
+      if (eventMaxParticipants && eventMaxParticipants < 1) {
+        return NextResponse.json(
+          { error: "Maximum participants must be at least 1." },
+          { status: 400 }
+        );
+      }
     }
 
     // Check if slug already exists
@@ -50,6 +96,14 @@ export async function POST(request: NextRequest) {
     const canPublish = user.role === "admin" || user.role === "editor";
     const shouldPublish = published && canPublish;
 
+    // Prepare default registration form for events
+    const defaultRegistrationForm = [
+      { name: "name", label: "Full Name", type: "text" as const, required: true, placeholder: "Enter your full name" },
+      { name: "email", label: "Email", type: "email" as const, required: true, placeholder: "Enter your email" },
+      { name: "phone", label: "Phone Number", type: "tel" as const, required: false, placeholder: "Enter your phone number" },
+      { name: "age", label: "Age", type: "number" as const, required: true, placeholder: "Enter your age" }
+    ];
+
     // Create the post
     const newPost = await db.insert(blogPosts).values({
       title,
@@ -62,15 +116,28 @@ export async function POST(request: NextRequest) {
       category: category || null,
       readTime,
       publishedAt: shouldPublish ? new Date() : null,
+      isEvent,
+      // Event fields
+      eventStartDate: isEvent && eventStartDate ? new Date(eventStartDate) : null,
+      eventEndDate: isEvent && eventEndDate ? new Date(eventEndDate) : null,
+      eventLocation: isEvent && eventLocation ? eventLocation : null,
+      eventMaxParticipants: isEvent && eventMaxParticipants ? parseInt(eventMaxParticipants.toString()) : null,
+      eventIsActive: isEvent ? true : false,
+      eventRegistrationForm: isEvent ? (eventRegistrationForm || defaultRegistrationForm) : defaultRegistrationForm,
     }).returning();
 
     // Revalidate the posts page
     revalidatePath("/blog");
     revalidatePath("/dashboard/posts");
+    if (isEvent) {
+      revalidatePath("/events");
+    }
 
     return NextResponse.json(
       { 
-        message: shouldPublish ? "Post published successfully" : "Post created successfully",
+        message: shouldPublish 
+          ? (isEvent ? "Event published successfully" : "Post published successfully")
+          : (isEvent ? "Event created successfully" : "Post created successfully"),
         post: newPost[0]
       },
       { status: 201 }
@@ -78,7 +145,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error creating post:", error);
     
-    // Handle auth errors specifically
     if (error instanceof Error && error.message.includes("Unauthorized")) {
       return NextResponse.json(
         { error: error.message },
@@ -104,6 +170,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || "";
     const category = searchParams.get("category") || "";
     const published = searchParams.get("published");
+    const isEvent = searchParams.get("isEvent");
 
     const offset = (page - 1) * limit;
 
@@ -134,6 +201,12 @@ export async function GET(request: NextRequest) {
         conditions.push(isNull(blogPosts.publishedAt));
       }
     }
+    
+    // Add event filter
+    if (isEvent !== null) {
+      const isEventPost = isEvent === "true";
+      conditions.push(eq(blogPosts.isEvent, isEventPost));
+    }
 
     // Build the final query
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -145,7 +218,7 @@ export async function GET(request: NextRequest) {
       .where(whereClause)
       .limit(limit)
       .offset(offset)
-      .orderBy(blogPosts.createdAt);
+      .orderBy(desc(blogPosts.createdAt));
 
     // Get total count for pagination
     const totalCountResult = await db
@@ -167,7 +240,6 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Error fetching posts:", error);
     
-    // Handle auth errors specifically
     if (error instanceof Error && error.message.includes("Unauthorized")) {
       return NextResponse.json(
         { error: error.message },

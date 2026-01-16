@@ -25,7 +25,7 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
 });
 
-// Blog Posts Table
+// Blog Posts Table - Updated to include event fields
 export const blogPosts = pgTable("blog_posts", {
   id: serial("id").primaryKey(),
   title: varchar("title", { length: 500 }).notNull(),
@@ -34,6 +34,7 @@ export const blogPosts = pgTable("blog_posts", {
   content: text("content").notNull(), // Rich text editor content (HTML)
   featuredImage: varchar("featured_image", { length: 500 }), // Main cover image
   featured: boolean("featured").default(false),
+  isEvent: boolean("is_event").default(false),
   authorId: integer("author_id")
     .references(() => users.id)
     .notNull(),
@@ -45,7 +46,41 @@ export const blogPosts = pgTable("blog_posts", {
   publishedAt: timestamp("published_at", { mode: "date" }),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
+  // Event-specific fields
+  eventStartDate: timestamp("event_start_date", { mode: "date" }),
+  eventEndDate: timestamp("event_end_date", { mode: "date" }),
+  eventLocation: varchar("event_location", { length: 255 }),
+  eventMaxParticipants: integer("event_max_participants"),
+  eventIsActive: boolean("event_is_active").default(true),
+  eventRegistrationForm: jsonb("event_registration_form").$type<Array<{
+    name: string;
+    label: string;
+    type: "text" | "email" | "tel" | "textarea" | "select" | "checkbox" | "radio" | "number" | "date";
+    required: boolean;
+    options?: string[]; // For select, radio, checkbox
+    placeholder?: string;
+  }>>().notNull().default([
+    { name: "name", label: "Full Name", type: "text", required: true, placeholder: "Enter your full name" },
+    { name: "email", label: "Email", type: "email", required: true, placeholder: "Enter your email" },
+    { name: "phone", label: "Phone Number", type: "tel", required: false, placeholder: "Enter your phone number" },
+    { name: "age", label: "Age", type: "number", required: true, placeholder: "Enter your age" }
+  ]),
 });
+
+// Event Registrations Table - Updated to reference blogPosts directly
+export const eventRegistrations = pgTable("event_registrations", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id")
+    .references(() => blogPosts.id, { onDelete: "cascade" })
+    .notNull(),
+  userId: integer("user_id")
+    .references(() => users.id, { onDelete: "cascade" }),
+  registrationData: jsonb("registration_data").notNull(), // Store form responses
+  registeredAt: timestamp("registered_at", { mode: "date" }).defaultNow().notNull(),
+}, (t) => ({
+  // Ensure a user can only register once for an event
+  userEventUnique: unique().on(t.postId, t.userId),
+}));
 
 // Blog Comments Table
 export const blogComments = pgTable("blog_comments", {
@@ -298,6 +333,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   brandDivisions: many(brandDivisions),
   blogPostLikes: many(blogPostLikes),
   blogPostViews: many(blogPostViews),
+  eventRegistrations: many(eventRegistrations),
 }));
 
 export const blogPostsRelations = relations(blogPosts, ({ one, many }) => ({
@@ -309,6 +345,7 @@ export const blogPostsRelations = relations(blogPosts, ({ one, many }) => ({
   categories: many(blogPostCategories),
   likes: many(blogPostLikes),
   views: many(blogPostViews),
+  eventRegistrations: many(eventRegistrations),
 }));
 
 export const blogCommentsRelations = relations(blogComments, ({ one }) => ({
@@ -345,6 +382,17 @@ export const blogPostViewsRelations = relations(blogPostViews, ({ one }) => ({
   }),
   user: one(users, {
     fields: [blogPostViews.userId],
+    references: [users.id],
+  }),
+}));
+
+export const eventRegistrationsRelations = relations(eventRegistrations, ({ one }) => ({
+  post: one(blogPosts, {
+    fields: [eventRegistrations.postId],
+    references: [blogPosts.id],
+  }),
+  user: one(users, {
+    fields: [eventRegistrations.userId],
     references: [users.id],
   }),
 }));
@@ -417,11 +465,12 @@ export const tables = {
   blogCategories,
   blogPostCategories,
   clients,
-  partners, // NEW
+  partners,
   journeyItems,
   achievements, 
   departments, 
   teamMembers, 
+  eventRegistrations,
 };
 
 // Export all schemas
@@ -437,14 +486,14 @@ export type BlogPostView = typeof blogPostViews.$inferSelect;
 export type NewBlogPostView = typeof blogPostViews.$inferInsert;
 export type BrandDivision = typeof brandDivisions.$inferSelect;
 export type NewBrandDivision = typeof brandDivisions.$inferInsert;
-export type BrandDivisionImage = typeof brandDivisionImages.$inferSelect; // NEW
-export type NewBrandDivisionImage = typeof brandDivisionImages.$inferInsert; // NEW
+export type BrandDivisionImage = typeof brandDivisionImages.$inferSelect;
+export type NewBrandDivisionImage = typeof brandDivisionImages.$inferInsert;
 export type BlogCategory = typeof blogCategories.$inferSelect;
 export type NewBlogCategory = typeof blogCategories.$inferInsert;
 export type Client = typeof clients.$inferSelect;
 export type NewClient = typeof clients.$inferInsert;
-export type Partner = typeof partners.$inferSelect; // NEW
-export type NewPartner = typeof partners.$inferInsert; // NEW
+export type Partner = typeof partners.$inferSelect;
+export type NewPartner = typeof partners.$inferInsert;
 export type JourneyItem = typeof journeyItems.$inferSelect;
 export type NewJourneyItem = typeof journeyItems.$inferInsert;
 export type Achievement = typeof achievements.$inferSelect; 
@@ -453,5 +502,7 @@ export type Department = typeof departments.$inferSelect;
 export type NewDepartment = typeof departments.$inferInsert; 
 export type TeamMember = typeof teamMembers.$inferSelect; 
 export type NewTeamMember = typeof teamMembers.$inferInsert; 
-export type BrandActivity = typeof brandActivities.$inferSelect; // NEW
-export type NewBrandActivity = typeof brandActivities.$inferInsert; // NEW
+export type BrandActivity = typeof brandActivities.$inferSelect;
+export type NewBrandActivity = typeof brandActivities.$inferInsert;
+export type EventRegistration = typeof eventRegistrations.$inferSelect;
+export type NewEventRegistration = typeof eventRegistrations.$inferInsert;

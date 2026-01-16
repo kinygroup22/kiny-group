@@ -1,5 +1,5 @@
 {
-  "id": "ad957e18-0994-4cd2-acd6-b06de35b6f44",
+  "id": "62ff5c11-0987-4ea1-b3b5-f38d18431023",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -474,6 +474,13 @@
           "notNull": false,
           "default": false
         },
+        "is_event": {
+          "name": "is_event",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
         "author_id": {
           "name": "author_id",
           "type": "integer",
@@ -533,6 +540,44 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "event_start_date": {
+          "name": "event_start_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "event_end_date": {
+          "name": "event_end_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "event_location": {
+          "name": "event_location",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "event_max_participants": {
+          "name": "event_max_participants",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "event_is_active": {
+          "name": "event_is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "event_registration_form": {
+          "name": "event_registration_form",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[{\"name\":\"name\",\"label\":\"Full Name\",\"type\":\"text\",\"required\":true,\"placeholder\":\"Enter your full name\"},{\"name\":\"email\",\"label\":\"Email\",\"type\":\"email\",\"required\":true,\"placeholder\":\"Enter your email\"},{\"name\":\"phone\",\"label\":\"Phone Number\",\"type\":\"tel\",\"required\":false,\"placeholder\":\"Enter your phone number\"},{\"name\":\"age\",\"label\":\"Age\",\"type\":\"number\",\"required\":true,\"placeholder\":\"Enter your age\"}]'::jsonb"
         }
       },
       "indexes": {},
@@ -1033,6 +1078,86 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.event_registrations": {
+      "name": "event_registrations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "post_id": {
+          "name": "post_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "registration_data": {
+          "name": "registration_data",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "registered_at": {
+          "name": "registered_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "event_registrations_post_id_blog_posts_id_fk": {
+          "name": "event_registrations_post_id_blog_posts_id_fk",
+          "tableFrom": "event_registrations",
+          "tableTo": "blog_posts",
+          "columnsFrom": [
+            "post_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "event_registrations_user_id_users_id_fk": {
+          "name": "event_registrations_user_id_users_id_fk",
+          "tableFrom": "event_registrations",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "event_registrations_post_id_user_id_unique": {
+          "name": "event_registrations_post_id_user_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "post_id",
+            "user_id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

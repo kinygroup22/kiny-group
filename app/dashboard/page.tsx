@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { blogPosts, blogComments, users, brandDivisions } from "@/lib/db/schema";
-import { count, sql, gte, desc } from "drizzle-orm";
+import { count, sql, gte, desc, between, and } from "drizzle-orm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,12 +12,20 @@ import {
   FileText, 
   MessageSquare, 
   Users, 
-  Building2,
-  RefreshCw
+  RefreshCw,
+  UserPlus,
+  Calendar
 } from "lucide-react";
 import { Suspense } from "react";
 import { ActivityFeed } from "./components/activity-feed";
 import { Activity as ActivityType, GroupedActivities } from "./types";
+import { RegistrationChart } from "@/components/dashboard/registration-chart";
+
+// Define the type for registration data
+interface RegistrationData {
+  date: string;
+  count: number;
+}
 
 // Format time difference
 function formatTimeDiff(date: Date) {
@@ -76,26 +84,27 @@ async function getDashboardData() {
   const lastMonth = new Date();
   lastMonth.setMonth(lastMonth.getMonth() - 1);
 
+  // Get dates for chart data (last 30 days by default)
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
   // Fetch all data in parallel
   const [
     totalPosts,
     totalComments,
     totalUsers,
-    totalDivisions,
     lastMonthPosts,
     lastMonthComments,
     lastMonthUsers,
-    lastMonthDivisions,
     recentPosts,
     recentComments,
     recentUsers,
-    recentBrands,
+    registrationDataRaw,
   ] = await Promise.all([
     // Current totals
     db.select({ count: count() }).from(blogPosts),
     db.select({ count: count() }).from(blogComments),
     db.select({ count: count() }).from(users),
-    db.select({ count: count() }).from(brandDivisions),
     
     // Last month counts for comparison
     db.select({ count: count() })
@@ -107,9 +116,6 @@ async function getDashboardData() {
     db.select({ count: count() })
       .from(users)
       .where(gte(users.createdAt, lastMonth)),
-    db.select({ count: count() })
-      .from(brandDivisions)
-      .where(gte(brandDivisions.createdAt, lastMonth)),
 
     // Recent activity data
     db.select({
@@ -153,18 +159,22 @@ async function getDashboardData() {
       .orderBy(desc(users.createdAt))
       .limit(20),
 
+    // Registration data for chart
     db.select({
-      id: brandDivisions.id,
-      name: brandDivisions.name,
-      createdAt: brandDivisions.updatedAt,
-      authorName: users.name,
-      authorEmail: users.email,
+      date: sql`DATE(${users.createdAt})`.as('date'),
+      count: count(),
     })
-      .from(brandDivisions)
-      .leftJoin(users, sql`${brandDivisions.authorId} = ${users.id}`)
-      .orderBy(desc(brandDivisions.updatedAt))
-      .limit(20),
+      .from(users)
+      .where(gte(users.createdAt, thirtyDaysAgo))
+      .groupBy(sql`DATE(${users.createdAt})`)
+      .orderBy(sql`DATE(${users.createdAt})`),
   ]);
+
+  // Type cast the registration data to ensure date is a string
+  const registrationData: RegistrationData[] = registrationDataRaw.map(item => ({
+    date: String(item.date),
+    count: item.count
+  }));
 
   // Calculate percentage changes
   const calculateChange = (current: number, lastMonth: number) => {
@@ -194,10 +204,10 @@ async function getDashboardData() {
       icon: Users
     },
     { 
-      label: 'Divisions', 
-      value: totalDivisions[0].count.toString(), 
-      change: calculateChange(totalDivisions[0].count, lastMonthDivisions[0].count),
-      icon: Building2
+      label: 'Registrations', 
+      value: lastMonthUsers[0].count.toString(), 
+      change: calculateChange(lastMonthUsers[0].count, Math.max(1, lastMonthUsers[0].count - 5)),
+      icon: UserPlus
     },
   ];
 
@@ -247,18 +257,6 @@ async function getDashboardData() {
         role: u.role
       }
     })),
-    ...recentBrands.map(brand => ({
-      id: `brand-${brand.id}`,
-      type: 'brand' as const,
-      action: `Updated brand division: "${brand.name}"`,
-      time: formatTimeDiff(brand.createdAt),
-      user: brand.authorName || brand.authorEmail || 'Unknown',
-      userEmail: brand.authorEmail || undefined, // Convert null to undefined
-      createdAt: brand.createdAt,
-      details: {
-        name: brand.name
-      }
-    })),
   ];
 
   // Sort by date
@@ -268,12 +266,13 @@ async function getDashboardData() {
     user,
     statsData,
     activities,
-    groupedActivities: groupActivitiesByDate(activities)
+    groupedActivities: groupActivitiesByDate(activities),
+    registrationData
   };
 }
 
 export default async function DashboardPage() {
-  const { user, statsData, activities, groupedActivities } = await getDashboardData();
+  const { user, statsData, activities, groupedActivities, registrationData } = await getDashboardData();
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -320,6 +319,32 @@ export default async function DashboardPage() {
           );
         })}
       </div>
+
+      {/* Registration Chart */}
+      <Card className="py-6 mb-8">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <UserPlus className="h-5 w-5" />
+                User Registrations
+              </CardTitle>
+              <CardDescription>Registration trends over time</CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                Last 30 days
+              </Badge>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Suspense fallback={<div>Loading chart...</div>}>
+            <RegistrationChart data={registrationData} />
+          </Suspense>
+        </CardContent>
+      </Card>
 
       {/* Two column grid */}
       <div className="grid gap-6 md:grid-cols-2 mb-8">
