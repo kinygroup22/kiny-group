@@ -2,7 +2,7 @@
 // app/(public)/event/register/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,7 +55,8 @@ interface RegistrationData {
   agreeToTerms: boolean;
 }
 
-export default function EventRegistrationPage() {
+// Create a separate component that uses useSearchParams
+function EventRegistrationContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -464,5 +465,26 @@ export default function EventRegistrationPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Fallback component to show while search params are loading
+function EventRegistrationLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+        <p className="text-muted-foreground">Loading registration page...</p>
+      </div>
+    </div>
+  );
+}
+
+// Main component that wraps the content in Suspense
+export default function EventRegistrationPage() {
+  return (
+    <Suspense fallback={<EventRegistrationLoading />}>
+      <EventRegistrationContent />
+    </Suspense>
   );
 }
