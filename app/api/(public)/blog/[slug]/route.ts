@@ -1,11 +1,8 @@
-// /api/blog/[slug]/route.ts
-
+// app/api/(public)/blog/[slug]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { blogPosts, users, blogComments, blogPostViews } from "@/lib/db/schema";
-import { eq, and, isNotNull, desc, sql } from "drizzle-orm";
-// import { unstable_cache } from "next/cache";
-// import { revalidateTag } from "next/cache";
+import { blogPosts, users, blogComments, blogPostViews, blogCategories, blogPostCategories, eventRegistrations } from "@/lib/db/schema";
+import { eq, and, isNotNull, desc, sql, count } from "drizzle-orm";
 
 // Cache individual blog post
 const getBlogPost = async (slug: string) => {
@@ -28,6 +25,14 @@ const getBlogPost = async (slug: string) => {
         createdAt: blogPosts.createdAt,
         updatedAt: blogPosts.updatedAt,
         featuredImage: blogPosts.featuredImage,
+        isEvent: blogPosts.isEvent,
+        // Event-specific fields
+        eventStartDate: blogPosts.eventStartDate,
+        eventEndDate: blogPosts.eventEndDate,
+        eventLocation: blogPosts.eventLocation,
+        eventMaxParticipants: blogPosts.eventMaxParticipants,
+        eventIsActive: blogPosts.eventIsActive,
+        eventRegistrationForm: blogPosts.eventRegistrationForm,
         author: {
           id: users.id,
           name: users.name,
@@ -51,6 +56,17 @@ const getBlogPost = async (slug: string) => {
 
     const post = posts[0];
 
+    // Get categories for this post
+    const categories = await db
+      .select({
+        id: blogCategories.id,
+        name: blogCategories.name,
+        slug: blogCategories.slug,
+      })
+      .from(blogPostCategories)
+      .innerJoin(blogCategories, eq(blogPostCategories.categoryId, blogCategories.id))
+      .where(eq(blogPostCategories.postId, post.id));
+
     // Get comments for this post
     const comments = await db
       .select({
@@ -69,6 +85,26 @@ const getBlogPost = async (slug: string) => {
       .where(eq(blogComments.postId, post.id))
       .orderBy(desc(blogComments.createdAt));
 
+    // Get registration count and details if it's an event
+    let registrationCount = 0;
+    let spotsRemaining = null;
+    let isFull = false;
+    const isUserRegistered = false;
+    
+    if (post.isEvent && post.eventIsActive) {
+      const [result] = await db
+        .select({ count: count() })
+        .from(eventRegistrations)
+        .where(eq(eventRegistrations.postId, post.id));
+      
+      registrationCount = result.count;
+      
+      if (post.eventMaxParticipants) {
+        spotsRemaining = post.eventMaxParticipants - registrationCount;
+        isFull = registrationCount >= post.eventMaxParticipants;
+      }
+    }
+
     return {
       id: post.id.toString(),
       title: post.title,
@@ -78,6 +114,7 @@ const getBlogPost = async (slug: string) => {
       imageUrl: post.featuredImage || '/placeholder-blog.jpg',
       featured: post.featured || false,
       category: post.category || 'Uncategorized',
+      categories: categories || [],
       readTime: post.readTime ? `${post.readTime} menit baca` : '5 menit baca',
       likes: post.likes || 0,
       views: post.views || 0,
@@ -92,6 +129,18 @@ const getBlogPost = async (slug: string) => {
       authorImage: post.author?.image,
       createdAt: post.createdAt?.toISOString(),
       updatedAt: post.updatedAt?.toISOString(),
+      // Event fields
+      isEvent: post.isEvent || false,
+      eventStartDate: post.eventStartDate?.toISOString(),
+      eventEndDate: post.eventEndDate?.toISOString(),
+      eventLocation: post.eventLocation,
+      eventMaxParticipants: post.eventMaxParticipants,
+      eventIsActive: post.eventIsActive,
+      eventRegistrationForm: post.eventRegistrationForm,
+      registrationCount,
+      spotsRemaining,
+      isFull,
+      isUserRegistered,
       commentsList: comments.map(comment => ({
         id: comment.id.toString(),
         content: comment.content,

@@ -61,6 +61,7 @@ CREATE TABLE "blog_posts" (
 	"content" text NOT NULL,
 	"featured_image" varchar(500),
 	"featured" boolean DEFAULT false,
+	"is_event" boolean DEFAULT false,
 	"author_id" integer NOT NULL,
 	"category" varchar(100),
 	"read_time" integer DEFAULT 5,
@@ -70,6 +71,12 @@ CREATE TABLE "blog_posts" (
 	"published_at" timestamp,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"event_start_date" timestamp,
+	"event_end_date" timestamp,
+	"event_location" varchar(255),
+	"event_max_participants" integer,
+	"event_is_active" boolean DEFAULT true,
+	"event_registration_form" jsonb DEFAULT '[{"name":"name","label":"Full Name","type":"text","required":true,"placeholder":"Enter your full name"},{"name":"email","label":"Email","type":"email","required":true,"placeholder":"Enter your email"},{"name":"phone","label":"Phone Number","type":"tel","required":false,"placeholder":"Enter your phone number"},{"name":"age","label":"Age","type":"number","required":true,"placeholder":"Enter your age"}]'::jsonb NOT NULL,
 	CONSTRAINT "blog_posts_slug_unique" UNIQUE("slug")
 );
 --> statement-breakpoint
@@ -145,6 +152,15 @@ CREATE TABLE "departments" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "event_registrations" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"post_id" integer NOT NULL,
+	"user_id" integer,
+	"registration_data" jsonb NOT NULL,
+	"registered_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "event_registrations_post_id_user_id_unique" UNIQUE("post_id","user_id")
+);
+--> statement-breakpoint
 CREATE TABLE "journey_items" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"year" varchar(10) NOT NULL,
@@ -205,4 +221,6 @@ ALTER TABLE "blog_posts" ADD CONSTRAINT "blog_posts_author_id_users_id_fk" FOREI
 ALTER TABLE "brand_activities" ADD CONSTRAINT "brand_activities_brand_division_id_brand_divisions_id_fk" FOREIGN KEY ("brand_division_id") REFERENCES "public"."brand_divisions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "brand_division_images" ADD CONSTRAINT "brand_division_images_brand_division_id_brand_divisions_id_fk" FOREIGN KEY ("brand_division_id") REFERENCES "public"."brand_divisions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "brand_divisions" ADD CONSTRAINT "brand_divisions_author_id_users_id_fk" FOREIGN KEY ("author_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "event_registrations" ADD CONSTRAINT "event_registrations_post_id_blog_posts_id_fk" FOREIGN KEY ("post_id") REFERENCES "public"."blog_posts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "event_registrations" ADD CONSTRAINT "event_registrations_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "team_members" ADD CONSTRAINT "team_members_department_id_departments_id_fk" FOREIGN KEY ("department_id") REFERENCES "public"."departments"("id") ON DELETE no action ON UPDATE no action;

@@ -28,7 +28,8 @@ import {
   Facebook,
   Twitter,
   Linkedin,
-  Link2
+  Link2,
+  CalendarDays
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -58,6 +59,7 @@ interface BlogPost {
   tags?: string[];
   views?: number;
   authorImage?: string;
+  isEvent: boolean;
 }
 
 interface Comment {
@@ -129,7 +131,8 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
           published: data.published,
           createdAt: data.createdAt,
           updatedAt: data.updatedAt,
-          tags: data.tags || []
+          tags: data.tags || [],
+          isEvent: data.isEvent || false,
         };
         
         setBlogPost(transformedPost);
@@ -268,56 +271,56 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
   };
 
   const handleShare = async (platform?: string) => {
-  const url = window.location.href;
-  const text = blogPost?.title || '';
+    const url = window.location.href;
+    const text = blogPost?.title || '';
 
-  if (platform === 'facebook') {
-    const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-    window.open(shareUrl, '_blank', 'width=600,height=400');
-  } else if (platform === 'twitter') {
-    const shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
-    window.open(shareUrl, '_blank', 'width=600,height=400');
-  } else if (platform === 'linkedin') {
-    const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
-    window.open(shareUrl, '_blank', 'width=600,height=400');
-  } else {
-    // Copy link to clipboard
-    try {
-      // Check if the Clipboard API is available
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(url);
-        showSuccessToast("Link berhasil disalin!");
-      } else {
-        // Fallback for older browsers
-        const textArea = document.createElement('textarea');
-        textArea.value = url;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        
-        try {
-          const successful = document.execCommand('copy');
-          if (successful) {
-            showSuccessToast("Link berhasil disalin!");
-          } else {
-            throw new Error('Copy command failed');
+    if (platform === 'facebook') {
+      const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+      window.open(shareUrl, '_blank', 'width=600,height=400');
+    } else if (platform === 'twitter') {
+      const shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+      window.open(shareUrl, '_blank', 'width=600,height=400');
+    } else if (platform === 'linkedin') {
+      const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+      window.open(shareUrl, '_blank', 'width=600,height=400');
+    } else {
+      // Copy link to clipboard
+      try {
+        // Check if the Clipboard API is available
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(url);
+          showSuccessToast("Link berhasil disalin!");
+        } else {
+          // Fallback for older browsers
+          const textArea = document.createElement('textarea');
+          textArea.value = url;
+          textArea.style.position = 'fixed';
+          textArea.style.left = '-999999px';
+          textArea.style.top = '-999999px';
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          
+          try {
+            const successful = document.execCommand('copy');
+            if (successful) {
+              showSuccessToast("Link berhasil disalin!");
+            } else {
+              throw new Error('Copy command failed');
+            }
+          } catch (err) {
+            showSuccessToast("Gagal menyalin link. Silakan salin secara manual.");
+            console.error('Fallback copy failed:', err);
           }
-        } catch (err) {
-          showSuccessToast("Gagal menyalin link. Silakan salin secara manual.");
-          console.error('Fallback copy failed:', err);
+          
+          document.body.removeChild(textArea);
         }
-        
-        document.body.removeChild(textArea);
+      } catch (err) {
+        showSuccessToast("Gagal menyalin link. Silakan salin secara manual.");
+        console.error('Error copying link:', err);
       }
-    } catch (err) {
-      showSuccessToast("Gagal menyalin link. Silakan salin secara manual.");
-      console.error('Error copying link:', err);
     }
-  }
-};
+  };
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -417,11 +420,19 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
               </Link>
             </Button>
             
-            
-            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight drop-shadow-2xl flex flex-col">
-              <Badge className="mb-4 bg-primary hover:bg-primary/90 text-primary-foreground border-0 shadow-lg text-sm px-4 py-1">
+            <div className="flex flex-wrap gap-2 mb-4">
+              <Badge className="bg-primary hover:bg-primary/90 text-primary-foreground border-0 shadow-lg text-sm px-4 py-1">
                 {blogPost.category}
               </Badge>
+              {blogPost.isEvent && (
+                <Badge className="bg-indigo-500 hover:bg-indigo-600 text-white border-0 shadow-lg text-sm px-4 py-1">
+                  <CalendarDays className="h-3 w-3 mr-1" />
+                  Event
+                </Badge>
+              )}
+            </div>
+            
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight drop-shadow-2xl">
               {blogPost.title}
             </h1>
             
@@ -464,6 +475,65 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
 
       <div className="container mx-auto px-4 pb-10 -mt-12 relative z-10">
         <div className="max-w-4xl mx-auto">
+          {/* Event Registration Button */}
+          {blogPost.isEvent && (
+            <Card className="border bg-card mb-8">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between gap-4 flex-wrap">
+                  <div className="flex-1 space-y-3">
+                    <h3 className="text-xl font-bold flex items-center gap-2">
+                      <CalendarDays className="h-6 w-6" />
+                      Event Details
+                    </h3>
+                    
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-start gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
+                        <div>
+                          <p className="font-medium">
+                            {new Date(blogPost.date).toLocaleDateString('en-US', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </p>
+                          <p className="text-muted-foreground">
+                            {new Date(blogPost.date).toLocaleTimeString('en-US', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span>Hosted by {blogPost.author}</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                        <span>{blogPost.views?.toLocaleString() || 0} people interested</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    asChild 
+                    size="lg" 
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                  >
+                    <Link href={`/event/register?post=${blogPost.slug}`}>
+                      <CalendarDays className="mr-2 h-4 w-4" />
+                      Register for Event
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Main Content Card */}
           <Card className="border-0 shadow-2xl overflow-hidden mb-8">
             {blogPost.excerpt && (
@@ -754,9 +824,17 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
                         <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       </div>
                       <CardHeader className="pb-3">
-                        <Badge className="w-fit bg-primary hover:bg-primary/90 mb-3 text-xs">
-                          {post.category}
-                        </Badge>
+                        <div className="flex gap-2 mb-3">
+                          <Badge className="w-fit bg-primary hover:bg-primary/90 text-xs">
+                            {post.category}
+                          </Badge>
+                          {post.isEvent && (
+                            <Badge className="bg-indigo-500 hover:bg-indigo-600 text-white text-xs">
+                              <CalendarDays className="h-3 w-3 mr-1" />
+                              Event
+                            </Badge>
+                          )}
+                        </div>
                         <CardTitle className="text-lg line-clamp-2 group-hover:text-primary transition-colors leading-snug">
                           {post.title}
                         </CardTitle>
@@ -773,7 +851,7 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
                           </div>
                         </div>
                         <Button className="w-full bg-primary hover:bg-primary/90 group-hover:shadow-lg transition-all" size="sm">
-                          Baca Artikel
+                          {post.isEvent ? "Lihat Event" : "Baca Artikel"}
                         </Button>
                       </CardContent>
                     </Card>
