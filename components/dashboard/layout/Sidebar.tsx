@@ -20,6 +20,7 @@ import {
   Briefcase,
   GraduationCap,
   Handshake,
+  UserCog,
   LucideIcon
 } from 'lucide-react';
 import { User } from '@/lib/db/schema';
@@ -80,6 +81,12 @@ const menuCategories: MenuCategory[] = [
         label: 'Categories', 
         href: '/dashboard/categories', 
         roles: ['admin', 'editor'] 
+      },
+      { 
+        icon: UserCog, 
+        label: 'Event Registrations', 
+        href: '/dashboard/event-registrations', 
+        roles: ['admin', 'editor', 'contributor'] 
       },
     ]
   },

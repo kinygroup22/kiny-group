@@ -16,7 +16,7 @@ import {
   LineChart,
   Line
 } from "recharts";
-import { Calendar, TrendingUp, BarChart3, UserPlus } from "lucide-react";
+import { TrendingUp, BarChart3, UserPlus } from "lucide-react";
 
 // Define the type for registration data
 export interface RegistrationData {
