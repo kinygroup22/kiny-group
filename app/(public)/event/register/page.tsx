@@ -50,6 +50,7 @@ interface RegistrationData {
   name: string;
   email: string;
   phone?: string;
+  age?: string;
   organization?: string;
   specialRequests?: string;
   agreeToTerms: boolean;
@@ -73,6 +74,7 @@ function EventRegistrationContent() {
     name: "",
     email: "",
     phone: "",
+    age: "",
     organization: "",
     specialRequests: "",
     agreeToTerms: false
@@ -250,8 +252,8 @@ function EventRegistrationContent() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-4xl mx-auto">
+      <div className="container mx-auto px-4 py-12 pt-16">
+        <div className="max-w-6xl mx-auto">
           <Button variant="ghost" asChild className="mb-6">
             <Link href={`/blog/${event?.slug}`}>
               <ArrowLeft className="mr-2 h-4 w-4" /> Back to Event
@@ -388,15 +390,31 @@ function EventRegistrationContent() {
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        placeholder="Your phone number"
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Phone Number</Label>
+                        <Input
+                          id="phone"
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                          placeholder="Your phone number"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="age">Age</Label>
+                        <Input
+                          id="age"
+                          name="age"
+                          type="number"
+                          min="1"
+                          max="120"
+                          value={formData.age}
+                          onChange={handleInputChange}
+                          placeholder="Your age"
+                        />
+                      </div>
                     </div>
                     
                     <div className="space-y-2">
