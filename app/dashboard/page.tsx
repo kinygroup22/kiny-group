@@ -2,8 +2,8 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { blogPosts, blogComments, users, brandDivisions } from "@/lib/db/schema";
-import { count, sql, gte, desc, between, and } from "drizzle-orm";
+import { blogPosts, blogComments, users, brandDivisions, eventRegistrations } from "@/lib/db/schema";
+import { count, sql, gte, desc, between, and, eq } from "drizzle-orm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,8 @@ import {
   Users, 
   RefreshCw,
   UserPlus,
-  Calendar
+  Calendar,
+  CalendarDays
 } from "lucide-react";
 import { Suspense } from "react";
 import { ActivityFeed } from "./components/activity-feed";
@@ -88,7 +89,76 @@ async function getDashboardData() {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  // Fetch all data in parallel
+  // Build the conditions for contributors
+  const contributorCondition = user.role === "contributor" 
+    ? eq(blogPosts.authorId, user.id) 
+    : undefined;
+
+  // Get total event registrations
+  const totalRegistrations = await db
+    .select({ count: count() })
+    .from(eventRegistrations)
+    .where(
+      user.role === "contributor" 
+        ? sql`${eventRegistrations.postId} IN (SELECT id FROM ${blogPosts} WHERE ${blogPosts.authorId} = ${user.id})`
+        : undefined
+    );
+
+  // Get registrations grouped by date for chart
+  const registrationDataRaw = await db
+    .select({
+      date: sql`DATE(${eventRegistrations.registeredAt})`.as('date'),
+      count: count(),
+    })
+    .from(eventRegistrations)
+    .where(
+      and(
+        gte(eventRegistrations.registeredAt, thirtyDaysAgo),
+        user.role === "contributor" 
+          ? sql`${eventRegistrations.postId} IN (SELECT id FROM ${blogPosts} WHERE ${blogPosts.authorId} = ${user.id})`
+          : undefined
+      )
+    )
+    .groupBy(sql`DATE(${eventRegistrations.registeredAt})`)
+    .orderBy(sql`DATE(${eventRegistrations.registeredAt})`);
+
+  // Get active events count
+  const activeEvents = await db
+    .select({ count: count() })
+    .from(blogPosts)
+    .where(
+      and(
+        eq(blogPosts.isEvent, true),
+        eq(blogPosts.eventIsActive, true),
+        contributorCondition
+      )
+    );
+
+  // Get total events count
+  const totalEvents = await db
+    .select({ count: count() })
+    .from(blogPosts)
+    .where(
+      and(
+        eq(blogPosts.isEvent, true),
+        contributorCondition
+      )
+    );
+
+  // Get last month event registrations for comparison
+  const lastMonthEventRegistrations = await db
+    .select({ count: count() })
+    .from(eventRegistrations)
+    .where(
+      and(
+        gte(eventRegistrations.registeredAt, lastMonth),
+        user.role === "contributor" 
+          ? sql`${eventRegistrations.postId} IN (SELECT id FROM ${blogPosts} WHERE ${blogPosts.authorId} = ${user.id})`
+          : undefined
+      )
+    );
+
+  // Fetch all other data in parallel
   const [
     totalPosts,
     totalComments,
@@ -99,7 +169,6 @@ async function getDashboardData() {
     recentPosts,
     recentComments,
     recentUsers,
-    registrationDataRaw,
   ] = await Promise.all([
     // Current totals
     db.select({ count: count() }).from(blogPosts),
@@ -158,20 +227,10 @@ async function getDashboardData() {
       .from(users)
       .orderBy(desc(users.createdAt))
       .limit(20),
-
-    // Registration data for chart
-    db.select({
-      date: sql`DATE(${users.createdAt})`.as('date'),
-      count: count(),
-    })
-      .from(users)
-      .where(gte(users.createdAt, thirtyDaysAgo))
-      .groupBy(sql`DATE(${users.createdAt})`)
-      .orderBy(sql`DATE(${users.createdAt})`),
   ]);
 
-  // Type cast the registration data to ensure date is a string
-  const registrationData: RegistrationData[] = registrationDataRaw.map(item => ({
+  // Format the registration data
+  const registrationData = registrationDataRaw.map(item => ({
     date: String(item.date),
     count: item.count
   }));
@@ -204,10 +263,13 @@ async function getDashboardData() {
       icon: Users
     },
     { 
-      label: 'Registrations', 
-      value: lastMonthUsers[0].count.toString(), 
-      change: calculateChange(lastMonthUsers[0].count, Math.max(1, lastMonthUsers[0].count - 5)),
-      icon: UserPlus
+      label: 'Event Registrations', 
+      value: totalRegistrations[0].count.toString(), 
+      change: calculateChange(
+        totalRegistrations[0].count, 
+        lastMonthEventRegistrations[0].count
+      ),
+      icon: CalendarDays
     },
   ];
 
@@ -267,12 +329,22 @@ async function getDashboardData() {
     statsData,
     activities,
     groupedActivities: groupActivitiesByDate(activities),
-    registrationData
+    registrationData,
+    activeEvents: activeEvents[0].count,
+    totalEvents: totalEvents[0].count
   };
 }
 
 export default async function DashboardPage() {
-  const { user, statsData, activities, groupedActivities, registrationData } = await getDashboardData();
+  const { 
+    user, 
+    statsData, 
+    activities, 
+    groupedActivities, 
+    registrationData,
+    activeEvents,
+    totalEvents
+  } = await getDashboardData();
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -320,14 +392,14 @@ export default async function DashboardPage() {
         })}
       </div>
 
-      {/* Registration Chart */}
+      {/* Event Registration Chart */}
       <Card className="py-6 mb-8">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <UserPlus className="h-5 w-5" />
-                User Registrations
+                <CalendarDays className="h-5 w-5" />
+                Event Registrations
               </CardTitle>
               <CardDescription>Registration trends over time</CardDescription>
             </div>
@@ -335,6 +407,10 @@ export default async function DashboardPage() {
               <Badge variant="outline" className="flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
                 Last 30 days
+              </Badge>
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {activeEvents} active events
               </Badge>
             </div>
           </div>
@@ -372,60 +448,24 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Access Level */}
+        {/* Events Information */}
         <Card className="py-6">
           <CardHeader>
-            <CardTitle>Access Level</CardTitle>
-            <CardDescription>What you can do</CardDescription>
+            <CardTitle>Events Information</CardTitle>
+            <CardDescription>Current event statistics</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {user.role === "admin" && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                    <p className="text-sm text-foreground">Full system access</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                    <p className="text-sm text-foreground">User management</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                    <p className="text-sm text-foreground">Content management</p>
-                  </div>
-                </>
-              )}
-              {user.role === "editor" && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-blue-500" />
-                    <p className="text-sm text-foreground">Edit all content</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-blue-500" />
-                    <p className="text-sm text-foreground">Publish articles</p>
-                  </div>
-                </>
-              )}
-              {user.role === "contributor" && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                    <p className="text-sm text-foreground">Create content</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                    <p className="text-sm text-foreground">Submit for review</p>
-                  </div>
-                </>
-              )}
-              {user.role === "reader" && (
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-gray-500" />
-                  <p className="text-sm text-foreground">View content</p>
-                </div>
-              )}
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Total Events</p>
+              <Badge variant="outline">{totalEvents}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Active Events</p>
+              <Badge variant="default">{activeEvents}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Total Registrations</p>
+              <Badge variant="secondary">{registrationData.reduce((sum, item) => sum + item.count, 0)}</Badge>
             </div>
           </CardContent>
         </Card>

@@ -25,6 +25,7 @@ import {
   MapPin,
   Users,
   AlertCircle,
+  MoreHorizontal,
 } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow, format, differenceInDays, differenceInHours, differenceInMinutes } from "date-fns";
@@ -49,6 +50,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Category {
   id: string;
@@ -72,9 +80,8 @@ const getEventCountdown = (startDate: Date | null, endDate: Date | null, isActiv
     return {
       status: "ended",
       label: "Event Ended",
-      sublabel: format(end, "MMM d, yyyy 'at' h:mm a"),
-      color: "text-muted-foreground",
-      icon: "🏁"
+      sublabel: format(end, "MMM d, yyyy"),
+      color: "text-muted-foreground"
     };
   }
   
@@ -88,42 +95,37 @@ const getEventCountdown = (startDate: Date | null, endDate: Date | null, isActiv
         const minutesUntil = differenceInMinutes(start, now);
         return {
           status: "imminent",
-          label: `Starts in ${minutesUntil} minute${minutesUntil !== 1 ? 's' : ''}`,
+          label: `Starts in ${minutesUntil} min`,
           sublabel: format(start, "h:mm a"),
-          color: "text-orange-600 dark:text-orange-500",
-          icon: "🔥"
+          color: "text-orange-600 dark:text-orange-500"
         };
       }
       return {
         status: "today",
-        label: `Starts in ${hoursUntil} hour${hoursUntil !== 1 ? 's' : ''}`,
+        label: `Starts in ${hoursUntil}h`,
         sublabel: format(start, "h:mm a"),
-        color: "text-orange-600 dark:text-orange-500",
-        icon: "⏰"
+        color: "text-orange-600 dark:text-orange-500"
       };
     } else if (daysUntil === 1) {
       return {
         status: "tomorrow",
         label: "Starts Tomorrow",
         sublabel: format(start, "MMM d 'at' h:mm a"),
-        color: "text-blue-600 dark:text-blue-400",
-        icon: "📅"
+        color: "text-blue-600 dark:text-blue-400"
       };
     } else if (daysUntil <= 7) {
       return {
         status: "soon",
         label: `Starts in ${daysUntil} days`,
-        sublabel: format(start, "EEE, MMM d 'at' h:mm a"),
-        color: "text-blue-600 dark:text-blue-400",
-        icon: "📆"
+        sublabel: format(start, "EEE, MMM d"),
+        color: "text-blue-600 dark:text-blue-400"
       };
     } else {
       return {
         status: "upcoming",
         label: `Starts in ${daysUntil} days`,
-        sublabel: format(start, "MMM d, yyyy 'at' h:mm a"),
-        color: "text-blue-500 dark:text-blue-400",
-        icon: "📅"
+        sublabel: format(start, "MMM d, yyyy"),
+        color: "text-blue-500 dark:text-blue-400"
       };
     }
   }
@@ -138,8 +140,7 @@ const getEventCountdown = (startDate: Date | null, endDate: Date | null, isActiv
         status: "live",
         label: `Live Now • ${remaining}h left`,
         sublabel: `Ends at ${format(end, "h:mm a")}`,
-        color: "text-green-600 dark:text-green-500 animate-pulse",
-        icon: "🔴"
+        color: "text-green-600 dark:text-green-500"
       };
     } else {
       const totalDays = differenceInDays(end, start) + 1;
@@ -148,10 +149,9 @@ const getEventCountdown = (startDate: Date | null, endDate: Date | null, isActiv
       
       return {
         status: "live",
-        label: `Day ${currentDay} of ${totalDays}`,
-        sublabel: `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} remaining`,
-        color: "text-green-600 dark:text-green-500",
-        icon: "🟢"
+        label: `Day ${currentDay}/${totalDays}`,
+        sublabel: `${daysRemaining} days left`,
+        color: "text-green-600 dark:text-green-500"
       };
     }
   }
@@ -161,9 +161,8 @@ const getEventCountdown = (startDate: Date | null, endDate: Date | null, isActiv
   return {
     status: "past",
     label: "Event Ended",
-    sublabel: `${daysSinceEnd} day${daysSinceEnd !== 1 ? 's' : ''} ago`,
-    color: "text-muted-foreground",
-    icon: "🏁"
+    sublabel: `${daysSinceEnd} days ago`,
+    color: "text-muted-foreground"
   };
 };
 
@@ -188,7 +187,7 @@ const getEventStatusBadge = (startDate: Date | null, endDate: Date | null, isAct
   } else if (now >= start && now <= end) {
     return { 
       label: "Live", 
-      className: "bg-green-50 text-green-700 border border-green-200 dark:bg-green-950/50 dark:text-green-400 dark:border-green-900 animate-pulse" 
+      className: "bg-green-50 text-green-700 border border-green-200 dark:bg-green-950/50 dark:text-green-400 dark:border-green-900" 
     };
   } else {
     return { 
@@ -291,6 +290,12 @@ export default function PostsTableClient({ posts, user }: { posts: any[], user: 
     categoryFilter !== "all" || 
     featuredFilter !== "all" ||
     eventFilter !== "all";
+  
+  // Truncate function for titles
+  const truncateTitle = (title: string, maxLength: number = 50) => {
+    if (title.length <= maxLength) return title;
+    return title.substring(0, maxLength) + "...";
+  };
   
   return (
     <Card className="border-0 shadow-xl py-6">
@@ -482,7 +487,7 @@ export default function PostsTableClient({ posts, user }: { posts: any[], user: 
                               </div>
                               <div className="min-w-0 flex-1">
                                 <Link href={`/blog/${post.slug}`} target="_blank" className="font-medium hover:text-yellow-600 line-clamp-1 block">
-                                  {post.title}
+                                  {truncateTitle(post.title)}
                                 </Link>
                                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                                   {post.category && <Badge variant="outline" className="text-xs">{post.category}</Badge>}
@@ -523,76 +528,39 @@ export default function PostsTableClient({ posts, user }: { posts: any[], user: 
                           </td>
                           <td className="px-6 py-4">
                             {post.isEvent && eventCountdown ? (
-                              <div className="space-y-2.5 min-w-[220px]">
-                                {/* Main countdown display */}
-                                <div className="flex items-start gap-2.5">
-                                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-gold-100 to-gold-200 dark:from-gold-900/30 dark:to-gold-800/30 flex items-center justify-center shadow-sm">
-                                    <span className="text-base">{eventCountdown.icon}</span>
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className={`text-sm font-semibold leading-tight ${eventCountdown.color}`}>
-                                      {eventCountdown.label}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground leading-tight mt-0.5">
-                                      {eventCountdown.sublabel}
-                                    </p>
-                                  </div>
+                              <div className="space-y-2">
+                                <div className={`text-sm font-semibold ${eventCountdown.color}`}>
+                                  {eventCountdown.label}
                                 </div>
-
-                                {/* Status badge and details */}
-                                <div className="space-y-2">
-                                  {eventStatusBadge && (
-                                    <Badge 
-                                      className={`${eventStatusBadge.className} text-xs font-medium px-2.5 py-0.5 shadow-sm`}
-                                    >
-                                      {eventStatusBadge.label}
-                                    </Badge>
+                                <div className="text-xs text-muted-foreground">
+                                  {eventCountdown.sublabel}
+                                </div>
+                                {eventStatusBadge && (
+                                  <Badge 
+                                    className={`${eventStatusBadge.className} text-xs font-medium`}
+                                  >
+                                    {eventStatusBadge.label}
+                                  </Badge>
+                                )}
+                                <div className="flex flex-col gap-1">
+                                  {post.eventLocation && (
+                                    <div className="text-xs text-muted-foreground">
+                                      📍 {post.eventLocation}
+                                    </div>
                                   )}
-                                  
-                                  {/* Location and capacity in a compact grid */}
-                                  <div className="space-y-1.5">
-                                    {post.eventLocation && (
-                                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                        <div className="flex-shrink-0 w-4 h-4 rounded bg-muted flex items-center justify-center">
-                                          <MapPin className="h-2.5 w-2.5" />
-                                        </div>
-                                        <span className="truncate font-medium">{post.eventLocation}</span>
-                                      </div>
-                                    )}
-                                    
-                                    {post.eventMaxParticipants && (
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <div className="flex items-center gap-1.5 text-xs cursor-help">
-                                            <div className="flex-shrink-0 w-4 h-4 rounded bg-muted flex items-center justify-center">
-                                              <Users className="h-2.5 w-2.5 text-muted-foreground" />
-                                            </div>
-                                            <div className="flex items-center gap-1">
-                                              <span className={`font-semibold ${
-                                                post.registrationCount >= post.eventMaxParticipants 
-                                                  ? "text-red-600 dark:text-red-400" 
-                                                  : post.registrationCount >= post.eventMaxParticipants * 0.8
-                                                  ? "text-orange-600 dark:text-orange-400"
-                                                  : "text-muted-foreground"
-                                              }`}>
-                                                {post.registrationCount || 0}
-                                              </span>
-                                              <span className="text-muted-foreground">/</span>
-                                              <span className="text-muted-foreground">{post.eventMaxParticipants}</span>
-                                            </div>
-                                          </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="bottom" className="text-xs">
-                                          <div className="space-y-1">
-                                            <p className="font-semibold">{post.registrationCount || 0} registered</p>
-                                            <p className="text-muted-foreground">
-                                              {post.eventMaxParticipants - (post.registrationCount || 0)} spots remaining
-                                            </p>
-                                          </div>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    )}
-                                  </div>
+                                  {post.eventMaxParticipants && (
+                                    <div className="text-xs">
+                                      <span className={
+                                        post.registrationCount >= post.eventMaxParticipants 
+                                          ? "text-red-600 dark:text-red-400" 
+                                          : post.registrationCount >= post.eventMaxParticipants * 0.8
+                                          ? "text-orange-600 dark:text-orange-400"
+                                          : "text-muted-foreground"
+                                      }>
+                                        {post.registrationCount || 0}/{post.eventMaxParticipants} registered
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             ) : (
@@ -636,34 +604,40 @@ export default function PostsTableClient({ posts, user }: { posts: any[], user: 
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center justify-end gap-2">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Link href={`/blog/${post.slug}`} target="_blank">
-                                    <Button variant="ghost" size="sm"><Eye className="w-4 h-4" /></Button>
-                                  </Link>
-                                </TooltipTrigger>
-                                <TooltipContent><p>View Post</p></TooltipContent>
-                              </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Link href={`/dashboard/posts/${post.id}/edit`}>
-                                    <Button variant="ghost" size="sm"><Edit className="w-4 h-4" /></Button>
-                                  </Link>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Edit Post</p></TooltipContent>
-                              </Tooltip>
-                              {post.isEvent && (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Link href={`/dashboard/posts/${post.id}/registrations`}>
-                                      <Button variant="ghost" size="sm">
-                                        <Users className="w-4 h-4" />
-                                      </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem asChild>
+                                    <Link href={`/blog/${post.slug}`} target="_blank" className="flex items-center gap-2">
+                                      <Eye className="h-4 w-4" />
+                                      View Post
                                     </Link>
-                                  </TooltipTrigger>
-                                  <TooltipContent><p>View Registrations</p></TooltipContent>
-                                </Tooltip>
-                              )}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem asChild>
+                                    <Link href={`/dashboard/posts/${post.id}/edit`} className="flex items-center gap-2">
+                                      <Edit className="h-4 w-4" />
+                                      Edit Post
+                                    </Link>
+                                  </DropdownMenuItem>
+                                  {post.isEvent && (
+                                    <>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem asChild>
+                                        <Link href={`/dashboard/posts/${post.id}/registrations`} className="flex items-center gap-2">
+                                          <Users className="h-4 w-4" />
+                                          View Registrations
+                                        </Link>
+                                      </DropdownMenuItem>
+                                    </>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                              
                               {(user.role === "admin" || user.role === "editor" || post.authorId === user.id) && (
                                 <DeletePostButton postId={post.id} postTitle={post.title} />
                               )}

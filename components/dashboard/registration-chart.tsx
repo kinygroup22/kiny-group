@@ -16,7 +16,7 @@ import {
   LineChart,
   Line
 } from "recharts";
-import { TrendingUp, BarChart3, UserPlus } from "lucide-react";
+import { TrendingUp, BarChart3, CalendarDays } from "lucide-react";
 
 // Define the type for registration data
 export interface RegistrationData {
@@ -174,7 +174,7 @@ export function RegistrationChart({ data }: RegistrationChartProps) {
                 <p className="text-2xl font-bold">{totalRegistrations}</p>
               </div>
               <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                <UserPlus className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <CalendarDays className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </CardContent>

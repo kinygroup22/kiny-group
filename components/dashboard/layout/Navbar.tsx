@@ -70,7 +70,7 @@ export function Navbar({ user, onMenuClick }: NavbarProps) {
   return (
     <>
       <header className="sticky top-0 z-40 bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/60 border-b border-border">
-        <div className="flex items-center justify-end h-16 px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between lg:justify-end h-16 px-4 sm:px-6 lg:px-8">
           {/* Mobile menu button */}
           <button
             onClick={onMenuClick}
