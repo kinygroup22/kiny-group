@@ -8,9 +8,7 @@ import {
   blogPosts, 
   blogCategories, 
   blogPostCategories,
-  blogComments,
-  blogPostLikes,
-  blogPostViews,
+  eventRegistrations
 } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
@@ -22,10 +20,13 @@ const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle(sql);
 
 async function seed() {
-  console.log("Seeding database...");
+  console.log("🌱 Seeding database...");
 
   try {
-    // Create or get admin user
+    // ==================== CREATE USERS ====================
+    console.log("👥 Creating users...");
+    
+    // Admin User
     const adminPassword = await bcrypt.hash("admin123", 10);
     await db.insert(users).values({
       name: "Admin User",
@@ -35,8 +36,9 @@ async function seed() {
     }).onConflictDoNothing();
     
     const [adminUser] = await db.select().from(users).where(eq(users.email, "admin@example.com"));
+    console.log("✅ Admin user created");
 
-    // Create or get editor user
+    // Editor User
     const editorPassword = await bcrypt.hash("editor123", 10);
     await db.insert(users).values({
       name: "Editor User",
@@ -46,8 +48,9 @@ async function seed() {
     }).onConflictDoNothing();
     
     const [editorUser] = await db.select().from(users).where(eq(users.email, "editor@example.com"));
+    console.log("✅ Editor user created");
 
-    // Create or get contributor user
+    // Contributor User
     const contributorPassword = await bcrypt.hash("contributor123", 10);
     await db.insert(users).values({
       name: "Contributor User",
@@ -57,8 +60,9 @@ async function seed() {
     }).onConflictDoNothing();
     
     const [contributorUser] = await db.select().from(users).where(eq(users.email, "contributor@example.com"));
+    console.log("✅ Contributor user created");
 
-    // Create or get regular user
+    // Reader User
     const readerPassword = await bcrypt.hash("reader123", 10);
     await db.insert(users).values({
       name: "Reader User",
@@ -68,58 +72,50 @@ async function seed() {
     }).onConflictDoNothing();
     
     const [readerUser] = await db.select().from(users).where(eq(users.email, "reader@example.com"));
+    console.log("✅ Reader user created");
 
-    // Create or get brand users
-    const kinyCulturaPassword = await bcrypt.hash("kiny123", 10);
-    await db.insert(users).values({
-      name: "Kiny Cultura",
-      email: "kiny.cultura@example.com",
-      password: kinyCulturaPassword,
-      role: userRoles.CONTRIBUTOR,
-    }).onConflictDoNothing();
+    // ==================== CREATE CATEGORIES ====================
+    console.log("\n📁 Creating categories...");
     
-    const [kinyCulturaUser] = await db.select().from(users).where(eq(users.email, "kiny.cultura@example.com"));
-
-    const kinyToursPassword = await bcrypt.hash("tours123", 10);
-    await db.insert(users).values({
-      name: "Kiny Tours",
-      email: "kiny.tours@example.com",
-      password: kinyToursPassword,
-      role: userRoles.CONTRIBUTOR,
-    }).onConflictDoNothing();
-    
-    const [kinyToursUser] = await db.select().from(users).where(eq(users.email, "kiny.tours@example.com"));
-
-    // Create or get blog categories
     await db.insert(blogCategories).values({
       name: "Teknologi",
       slug: "teknologi",
-      description: "Postingan tentang tren teknologi, inovasi, dan berita teknologi terkini",
+      description: "Artikel tentang tren teknologi, inovasi, dan berita teknologi terkini",
     }).onConflictDoNothing();
     
     const [techCategory] = await db.select().from(blogCategories).where(eq(blogCategories.slug, "teknologi"));
+    console.log("✅ Technology category created");
 
     await db.insert(blogCategories).values({
-      name: "Desain",
-      slug: "desain",
-      description: "Prinsip desain, UI/UX, dan seni visual",
+      name: "Pendidikan",
+      slug: "pendidikan",
+      description: "Artikel dan konten edukatif",
     }).onConflictDoNothing();
     
-    const [designCategory] = await db.select().from(blogCategories).where(eq(blogCategories.slug, "desain"));
+    const [educationCategory] = await db.select().from(blogCategories).where(eq(blogCategories.slug, "pendidikan"));
+    console.log("✅ Education category created");
 
     await db.insert(blogCategories).values({
-      name: "Bisnis",
-      slug: "bisnis",
-      description: "Strategi bisnis, kewirausahaan, dan wawasan pasar",
+      name: "Event",
+      slug: "event",
+      description: "Acara, webinar, dan workshop yang akan datang",
     }).onConflictDoNothing();
     
-    const [businessCategory] = await db.select().from(blogCategories).where(eq(blogCategories.slug, "bisnis"));
+    const [eventCategory] = await db.select().from(blogCategories).where(eq(blogCategories.slug, "event"));
+    console.log("✅ Event category created");
 
-    // Create blog posts
-    const posts = [
-      {
+    // ==================== CREATE BLOG POSTS ====================
+    console.log("\n📝 Creating blog posts...");
+
+    // Regular Blog Post
+    const regularPostSlug = "masa-depan-pengembangan-web";
+    const existingRegularPost = await db.select().from(blogPosts).where(eq(blogPosts.slug, regularPostSlug));
+    
+    let regularPost;
+    if (existingRegularPost.length === 0) {
+      [regularPost] = await db.insert(blogPosts).values({
         title: "Masa Depan Pengembangan Web",
-        slug: "masa-depan-pengembangan-web",
+        slug: regularPostSlug,
         excerpt: "Mengeksplorasi tren dan teknologi yang sedang berkembang yang membentuk masa depan pengembangan web.",
         content: `
           <h2>Lanskap Pengembangan Web yang Terus Berkembang</h2>
@@ -139,270 +135,286 @@ async function seed() {
           <h3>Melihat ke Masa Depan</h3>
           <p>Saat kita melihat ke masa depan, kita dapat mengharapkan pengembangan web menjadi lebih spesialisasi, dengan perbedaan yang jelas antara peran frontend, backend, dan full-stack. Alat akan terus meningkat, membuat pengembangan lebih efisien sambil memungkinkan aplikasi yang semakin canggih.</p>
         `,
-        featuredImage: "https://picsum.photos/seed/webdev/1200/800.jpg",
+        featuredImage: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=800&fit=crop",
         featured: true,
+        isEvent: false,
         authorId: adminUser.id,
+        category: "Teknologi",
         readTime: 5,
+        views: 0,
+        likes: 0,
+        commentsCount: 0,
         publishedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
-      },
-      {
-        title: "Sistem Desain: Membangun Pengalaman Pengguna yang Konsisten",
-        slug: "sistem-desain-konsistensi",
-        excerpt: "Bagaimana sistem desain membantu tim membuat antarmuka pengguna yang konsisten dan dapat diskalakan.",
-        content: `
-          <h2>Apa itu Sistem Desain?</h2>
-          <p>Sistem desain adalah kumpulan komponen yang dapat digunakan kembali, dipandu oleh standar yang jelas, yang dapat dirakit bersama untuk membangun sejumlah aplikasi. Ini bukan hanya kit UI atau panduan gaya—ini adalah ekosistem lengkap yang mencakup prinsip desain, pedoman pengembangan, dan dokumentasi.</p>
-          
-          <h3>Manfaat Sistem Desain</h3>
-          <ul>
-            <li><strong>Konsistensi:</strong> Memastikan pengalaman yang kohesif di semua produk dan platform</li>
-            <li><strong>Effisiensi:</strong> Mempercepat proses desain dan pengembangan</li>
-            <li><strong>Skalabilitas:</strong> Memudahkan pemeliharaan dan perluasan produk</li>
-            <li><strong>Kolaborasi:</strong> Meningkatkan komunikasi antara desainer dan pengembang</li>
-          </ul>
-          
-          <h3>Komponen Kunci</h3>
-          <p>Sistem desain yang komprehensif biasanya mencakup:</p>
-          <ul>
-            <li>Bahasa desain visual (warna, tipografi, spasi)</li>
-            <li>Pustaka komponen (tombol, formulir, navigasi, dll.)</li>
-            <li>Pustaka pola (solusi umum untuk masalah desain)</li>
-            <li>Dokumentasi dan pedoman</li>
-            <li>Alat desain dan pengembangan</li>
-          </ul>
-          
-          <h3>Memulai</h3>
-          <p>Membangun sistem desain adalah investasi yang signifikan, tetapi manfaat jangka panjangnya sangat besar. Mulailah dengan skala kecil, fokus pada kasus penggunaan yang paling umum, dan secara bertahap perluas sistem berdasarkan kebutuhan tim Anda.</p>
-        `,
-        featuredImage: "https://picsum.photos/seed/design/1200/800.jpg",
-        featured: false,
-        authorId: editorUser.id,
-        readTime: 7,
-        publishedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
-      },
-      {
-        title: "Kerja Jarak Jauh: Normal Baru",
-        slug: "kerja-jarak-jauh-normal-baru",
-        excerpt: "Bagaimana kerja jarak jauh membentuk kembali budaya perusahaan dan produktivitas.",
-        content: `
-          <h2>Pergeseran ke Kerja Jarak Jauh</h2>
-          <p>Pandemi global mempercepat adopsi kerja jarak jauh, mengubahnya dari fasilitas menjadi kebutuhan. Sekarang, saat kita maju, kerja jarak jauh telah menjadi normal baru bagi banyak perusahaan dan industri.</p>
-          
-          <h3>Manfaat Kerja Jarak Jauh</h3>
-          <ul>
-            <li><strong>Fleksibilitas:</strong> Karyawan menikmati keseimbangan kerja-hidup yang lebih baik</li>
-            <li><strong>Pool Talenta:</strong> Perusahaan dapat merekrut dari mana saja di dunia</li>
-            <li><strong>Penghematan Biaya:</strong> Overhead yang berkurang untuk ruang kantor dan utilitas</li>
-            <li><strong>Produktivitas:</strong> Banyak karyawan melaporkan produktivitas yang lebih tinggi saat bekerja dari jarak jauh</li>
-          </ul>
-          
-          <h3>Tantangan yang Harus Diatasi</h3>
-          <p>Meskipun kerja jarak jauh menawarkan banyak manfaat, ini tidak tanpa tantangan:</p>
-          <ul>
-            <li>Mempertahankan budaya perusahaan dan kohesi tim</li>
-            <li>Memastikan komunikasi dan kolaborasi yang efektif</li>
-            <li>Memberikan dukungan teknis dan sumber daya yang memadai</li>
-            <li>Mengelola kinerja dan akuntabilitas</li>
-          </ul>
-          
-          <h3>Praktik Terbaik untuk Tim Jarak Jauh</h3>
-          <p>Untuk berhasil dengan kerja jarak jauh, perusahaan harus:</p>
-          <ul>
-            <li>Menginvestasikan alat kolaborasi yang andal</li>
-            <li>Membuat pedoman komunikasi yang jelas</li>
-            <li>Secara rutin memeriksa anggota tim</li>
-            <li>Menciptakan peluang untuk interaksi sosial</li>
-            <li>Mempercayai karyawan dan fokus pada hasil</li>
-          </ul>
-        `,
-        featuredImage: "https://picsum.photos/seed/remote/1200/800.jpg",
-        featured: true,
-        authorId: contributorUser.id,
-        readTime: 6,
-        publishedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-      },
-      {
-        title: "AI dalam Bisnis: Peluang dan Tantangan",
-        slug: "ai-bisnis-peluang-tantangan",
-        excerpt: "Mengeksplorasi bagaimana kecerdasan buatan mengubah operasi dan strategi bisnis.",
-        content: `
-          <h2>Revolusi AI dalam Bisnis</h2>
-          <p>Kecerdasan buatan tidak lagi sekadar buzzword—ini adalah teknologi transformatif yang membentuk kembali cara bisnis beroperasi, membuat keputusan, dan melayani pelanggan.</p>
-          
-          <h3>Aplikasi Kunci</h3>
-          <ul>
-            <li><strong>Layanan Pelanggan:</strong> Chatbot dan asisten virtual bertenaga AI</li>
-            <li><strong>Analitik Prediktif:</strong> Memprediksi tren dan perilaku pelanggan</li>
-            <li><strong>Otomatisasi Proses:</strong> Menyederhanakan tugas-tugas berulang</li>
-            <li><strong>Personalisasi:</strong> Menyesuaikan produk dan layanan</li>
-          </ul>
-          
-          <h3>Tantangan Implementasi</h3>
-          <p>Meskipun manfaat potensialnya, bisnis menghadapi beberapa tantangan saat mengimplementasikan AI:</p>
-          <ul>
-            <li>Kualitas dan ketersediaan data</li>
-            <li>Kekurangan talenta dan kesenjangan keterampilan</li>
-            <li>Pertimbangan etika dan bias</li>
-            <li>Integrasi dengan sistem yang ada</li>
-          </ul>
-          
-          <h3>Faktor Keberhasilan</h3>
-          <p>Implementasi AI yang berhasil memerlukan:</p>
-          <ul>
-            <li>Tujuan bisnis yang jelas</li>
-            <li>Dukungan eksekutif dan investasi</li>
-            <li>Pendekatan bertahap dengan kemenangan cepat</li>
-            <li>Pemantauan dan peningkatan berkelanjutan</li>
-          </ul>
-        `,
-        featuredImage: "https://picsum.photos/seed/aibusiness/1200/800.jpg",
-        featured: false,
-        authorId: adminUser.id,
-        readTime: 8,
-        publishedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-      },
-      {
-        title: "Praktik Terbaik Keamanan Siber untuk 2023",
-        slug: "keamanan-siber-praktik-terbaik-2023",
-        excerpt: "Langkah-langkah keamanan esensial yang harus diimplementasikan setiap bisnis untuk melindungi dari ancaman siber.",
-        content: `
-          <h2>Pentingnya Keamanan Siber yang Terus Tumbuh</h2>
-          <p>Saat bisnis semakin mengandalkan infrastruktur digital, keamanan siber telah menjadi perhatian kritis. Serangan siber menjadi lebih canggih, dan konsekuensi dari pelanggaran dapat merusak.</p>
-          
-          <h3>Langkah-langkah Keamanan Esensial</h3>
-          <ul>
-            <li><strong>Autentikasi Multi-Faktor:</strong> Tambahkan lapisan keamanan ekstra ke semua akun</li>
-            <li><strong>Pembaruan Reguler:</strong> Pertahankan semua perangkat lunak dan sistem tetap terkini</li>
-            <li><strong>Pelatihan Karyawan:</strong> Edukasi staf tentang praktik keamanan terbaik</li>
-            <li><strong>Enkripsi Data:</strong> Lindungi informasi sensitif baik dalam transit maupun saat diam</li>
-          </ul>
-          
-          <h3>Perencanaan Respons Insiden</h3>
-          <p>Setiap bisnis harus memiliki rencana respons insiden yang mencakup:</p>
-          <ul>
-            <li>Peran dan tanggung jawab yang jelas</li>
-            <li>Protokol komunikasi</li>
-            <li>Prosedur pemulihan</li>
-            <li>Analisis pasca-insiden</li>
-          </ul>
-          
-          <h3>Tetap Selangkah di Depan Ancaman</h3>
-          <p>Keamanan siber adalah proses berkelanjutan. Tetap informasikan tentang:</p>
-          <ul>
-            <li>Ancaman dan kerentanan yang muncul</li>
-            <li>Teknologi dan solusi keamanan baru</li>
-            <li>Persyaratan dan kepatuhan regulasi</li>
-            <li>Praktik terbaik industri</li>
-          </ul>
-        `,
-        featuredImage: "https://picsum.photos/seed/security/1200/800.jpg",
-        featured: true,
-        authorId: editorUser.id,
-        readTime: 6,
-        publishedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-      }
-    ];
-
-    // Insert posts and assign categories
-    for (const postData of posts) {
-      // Check if post already exists
-      const existingPost = await db.select().from(blogPosts).where(eq(blogPosts.slug, postData.slug));
+        // Event fields should be null for regular posts
+        eventStartDate: null,
+        eventEndDate: null,
+        eventLocation: null,
+        eventMaxParticipants: null,
+        eventIsActive: false,
+      }).returning();
       
-      if (existingPost.length === 0) {
-        const [newPost] = await db.insert(blogPosts).values(postData).returning();
-        
-        // Assign categories to posts
-        if (postData.slug === "masa-depan-pengembangan-web") {
-          await db.insert(blogPostCategories).values([
-            { postId: newPost.id, categoryId: techCategory.id },
-            { postId: newPost.id, categoryId: designCategory.id }
-          ]);
-        } else if (postData.slug === "sistem-desain-konsistensi") {
-          await db.insert(blogPostCategories).values([
-            { postId: newPost.id, categoryId: designCategory.id },
-            { postId: newPost.id, categoryId: techCategory.id }
-          ]);
-        } else if (postData.slug === "kerja-jarak-jauh-normal-baru") {
-          await db.insert(blogPostCategories).values([
-            { postId: newPost.id, categoryId: businessCategory.id }
-          ]);
-        } else if (postData.slug === "ai-bisnis-peluang-tantangan") {
-          await db.insert(blogPostCategories).values([
-            { postId: newPost.id, categoryId: businessCategory.id },
-            { postId: newPost.id, categoryId: techCategory.id }
-          ]);
-        } else if (postData.slug === "keamanan-siber-praktik-terbaik-2023") {
-          await db.insert(blogPostCategories).values([
-            { postId: newPost.id, categoryId: techCategory.id },
-            { postId: newPost.id, categoryId: businessCategory.id }
-          ]);
-        }
-      }
+      // Assign technology category
+      await db.insert(blogPostCategories).values({
+        postId: regularPost.id,
+        categoryId: techCategory.id
+      });
+      
+      console.log("✅ Regular blog post created: Masa Depan Pengembangan Web");
+    } else {
+      regularPost = existingRegularPost[0];
+      console.log("ℹ️  Regular blog post already exists");
     }
 
-    // Get all posts
-    const createdPosts = await db.select().from(blogPosts);
+    // Event Post
+    const eventPostSlug = "workshop-web-development-2025";
+    const existingEventPost = await db.select().from(blogPosts).where(eq(blogPosts.slug, eventPostSlug));
     
-    // Add some sample comments
-    for (const post of createdPosts.slice(0, 3)) {
-      // Check if comments already exist
-      const existingComments = await db.select().from(blogComments).where(eq(blogComments.postId, post.id));
+    let eventPost;
+    if (existingEventPost.length === 0) {
+      const eventStartDate = new Date();
+      eventStartDate.setDate(eventStartDate.getDate() + 14); // 14 days from now
+      eventStartDate.setHours(14, 0, 0, 0); // 2:00 PM
       
-      if (existingComments.length === 0) {
-        await db.insert(blogComments).values([
-          {
-            postId: post.id,
-            authorId: readerUser.id,
-            content: "Artikel yang sangat bagus! Ini sangat membantu dan informatif."
+      const eventEndDate = new Date(eventStartDate);
+      eventEndDate.setHours(17, 0, 0, 0); // 5:00 PM (3 hours duration)
+      
+      [eventPost] = await db.insert(blogPosts).values({
+        title: "Workshop: Membangun Aplikasi Web Modern dengan React & Next.js",
+        slug: eventPostSlug,
+        excerpt: "Bergabunglah dengan workshop intensif 3 jam untuk belajar membangun aplikasi web modern menggunakan React dan Next.js dari ahlinya.",
+        content: `
+          <h2>Tentang Workshop</h2>
+          <p>Workshop intensif ini dirancang untuk developer yang ingin menguasai pengembangan aplikasi web modern menggunakan React dan Next.js. Anda akan belajar langsung dari praktisi berpengalaman dan membangun proyek nyata selama workshop.</p>
+          
+          <h3>Yang Akan Anda Pelajari</h3>
+          <ul>
+            <li><strong>React Fundamentals:</strong> Komponen, Props, State, dan Hooks</li>
+            <li><strong>Next.js Essentials:</strong> Routing, Server Components, dan API Routes</li>
+            <li><strong>Styling Modern:</strong> Tailwind CSS dan Component Libraries</li>
+            <li><strong>Database Integration:</strong> Menghubungkan aplikasi dengan database</li>
+            <li><strong>Deployment:</strong> Deploy aplikasi Anda ke production</li>
+          </ul>
+          
+          <h3>Siapa yang Harus Ikut</h3>
+          <p>Workshop ini cocok untuk:</p>
+          <ul>
+            <li>Developer dengan pengalaman JavaScript dasar</li>
+            <li>Frontend developer yang ingin upgrade skill</li>
+            <li>Full-stack developer yang ingin belajar framework modern</li>
+            <li>Mahasiswa IT yang ingin terjun ke web development</li>
+          </ul>
+          
+          <h3>Persyaratan</h3>
+          <ul>
+            <li>Laptop dengan Node.js terinstall (v18 atau lebih baru)</li>
+            <li>Code editor (VS Code direkomendasikan)</li>
+            <li>Pemahaman dasar JavaScript</li>
+            <li>Koneksi internet yang stabil</li>
+          </ul>
+          
+          <h3>Yang Akan Anda Dapatkan</h3>
+          <ul>
+            <li>🎯 Hands-on project yang bisa di-deploy langsung</li>
+            <li>📚 Materi workshop lengkap dan source code</li>
+            <li>🎓 Sertifikat digital setelah menyelesaikan workshop</li>
+            <li>💬 Akses ke komunitas alumni untuk networking</li>
+            <li>🎁 Bonus template dan resources untuk proyek Anda</li>
+          </ul>
+          
+          <h3>Jadwal Workshop</h3>
+          <p><strong>Durasi:</strong> 3 jam (14:00 - 17:00 WIB)</p>
+          <p><strong>Format:</strong> Online via Zoom dengan sesi interaktif</p>
+          <p><strong>Bahasa:</strong> Bahasa Indonesia</p>
+          
+          <h3>Tentang Instruktur</h3>
+          <p>Workshop ini akan dipandu oleh tim developer berpengalaman dengan lebih dari 5 tahun pengalaman membangun aplikasi web skala enterprise menggunakan React dan Next.js.</p>
+          
+          <blockquote>
+            <p>"Workshop yang sangat praktis! Saya langsung bisa apply ilmunya di project kantor." - Alumni Workshop Batch 1</p>
+          </blockquote>
+          
+          <h3>Informasi Penting</h3>
+          <p>🔥 <strong>Kuota Terbatas:</strong> Hanya 50 peserta untuk memastikan kualitas interaksi</p>
+          <p>⏰ <strong>Early Bird:</strong> Daftar sekarang dan dapatkan akses ke pre-workshop preparation materials</p>
+          <p>💡 Link Zoom akan dikirim via email H-1 sebelum workshop</p>
+        `,
+        featuredImage: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=1200&h=800&fit=crop",
+        featured: true,
+        isEvent: true,
+        authorId: editorUser.id,
+        category: "Event",
+        readTime: 3,
+        views: 0,
+        likes: 0,
+        commentsCount: 0,
+        publishedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+        // Event-specific fields
+        eventStartDate: eventStartDate,
+        eventEndDate: eventEndDate,
+        eventLocation: "Online (Zoom Meeting)",
+        eventMaxParticipants: 50,
+        eventIsActive: true,
+        eventRegistrationForm: [
+          { 
+            name: "name", 
+            label: "Nama Lengkap", 
+            type: "text", 
+            required: true, 
+            placeholder: "Contoh: Ahmad Budiman" 
           },
-          {
-            postId: post.id,
-            authorId: contributorUser.id,
-            content: "Terima kasih telah berbagi. Saya belajar sesuatu yang baru hari ini."
+          { 
+            name: "email", 
+            label: "Email", 
+            type: "email", 
+            required: true, 
+            placeholder: "email@example.com" 
+          },
+          { 
+            name: "phone", 
+            label: "Nomor WhatsApp", 
+            type: "tel", 
+            required: true, 
+            placeholder: "08123456789" 
+          },
+          { 
+            name: "experience", 
+            label: "Tingkat Pengalaman", 
+            type: "select", 
+            required: true, 
+            options: [
+              "Pemula (< 1 tahun)", 
+              "Menengah (1-3 tahun)", 
+              "Advanced (> 3 tahun)"
+            ],
+            placeholder: "Pilih tingkat pengalaman Anda"
+          },
+          { 
+            name: "motivation", 
+            label: "Apa motivasi Anda mengikuti workshop ini?", 
+            type: "textarea", 
+            required: true, 
+            placeholder: "Ceritakan motivasi Anda..."
+          },
+          { 
+            name: "laptop", 
+            label: "Apakah Anda memiliki laptop dengan spesifikasi yang diperlukan?", 
+            type: "radio", 
+            required: true, 
+            options: ["Ya", "Tidak"] 
           }
-        ]);
-      }
+        ],
+      }).returning();
+      
+      // Assign event and education categories
+      await db.insert(blogPostCategories).values([
+        {
+          postId: eventPost.id,
+          categoryId: eventCategory.id
+        },
+        {
+          postId: eventPost.id,
+          categoryId: educationCategory.id
+        }
+      ]);
+      
+      console.log("✅ Event post created: Workshop Web Development 2025");
+
+      // ==================== CREATE SAMPLE REGISTRATIONS ====================
+      console.log("\n👨‍💼 Creating sample event registrations...");
+      
+      await db.insert(eventRegistrations).values([
+        {
+          postId: eventPost.id,
+          userId: readerUser.id,
+          registrationData: {
+            name: "Reader User",
+            email: "reader@example.com",
+            phone: "081234567890",
+            experience: "Pemula (< 1 tahun)",
+            motivation: "Saya ingin belajar framework modern untuk meningkatkan karir sebagai developer.",
+            laptop: "Ya"
+          }
+        },
+        {
+          postId: eventPost.id,
+          userId: contributorUser.id,
+          registrationData: {
+            name: "Contributor User",
+            email: "contributor@example.com",
+            phone: "081234567891",
+            experience: "Menengah (1-3 tahun)",
+            motivation: "Ingin upgrade skill dari React ke Next.js untuk project kantor.",
+            laptop: "Ya"
+          }
+        },
+        {
+          postId: eventPost.id,
+          userId: null, // Guest registration
+          registrationData: {
+            name: "John Doe",
+            email: "john.doe@example.com",
+            phone: "081234567892",
+            experience: "Pemula (< 1 tahun)",
+            motivation: "Baru lulus kuliah dan ingin memulai karir sebagai web developer.",
+            laptop: "Ya"
+          }
+        }
+      ]);
+      
+      console.log("✅ 3 sample registrations created (2 users + 1 guest)");
+    } else {
+      eventPost = existingEventPost[0];
+      console.log("ℹ️  Event post already exists");
     }
 
-    // Add some likes and views
-    for (const post of createdPosts) {
-      // Check if likes already exist
-      const existingLikes = await db.select().from(blogPostLikes).where(eq(blogPostLikes.postId, post.id));
-      
-      if (existingLikes.length === 0) {
-        // Add likes from different users
-        await db.insert(blogPostLikes).values([
-          { postId: post.id, userId: readerUser.id },
-          { postId: post.id, userId: contributorUser.id }
-        ]);
-      }
-      
-      // Check if views already exist
-      const existingViews = await db.select().from(blogPostViews).where(eq(blogPostViews.postId, post.id));
-      
-      if (existingViews.length === 0) {
-        // Add views
-        await db.insert(blogPostViews).values([
-          { postId: post.id, userId: readerUser.id },
-          { postId: post.id, userId: contributorUser.id },
-          { postId: post.id, ipAddress: "192.168.1.1" },
-          { postId: post.id, ipAddress: "192.168.1.2" }
-        ]);
-      }
-    }
-
-    console.log("Database seeded successfully!");
-    console.log("\nNOTE: Run 'npm run seed:brands' to seed brand divisions data");
-    console.log("\nLogin credentials:");
-    console.log("Admin: admin@example.com / admin123");
-    console.log("Editor: editor@example.com / editor123");
-    console.log("Contributor: contributor@example.com / contributor123");
-    console.log("Reader: reader@example.com / reader123");
-    console.log("Kiny Cultura: kiny.cultura@example.com / kiny123");
-    console.log("Kiny Tours: kiny.tours@example.com / tours123");
+    // ==================== SUMMARY ====================
+    console.log("\n" + "=".repeat(50));
+    console.log("🎉 Database seeded successfully!");
+    console.log("=".repeat(50));
+    console.log("\n📋 Summary:");
+    console.log("  • 4 users created (admin, editor, contributor, reader)");
+    console.log("  • 3 categories created (teknologi, pendidikan, event)");
+    console.log("  • 1 regular blog post created");
+    console.log("  • 1 event post created with 3 sample registrations");
+    
+    console.log("\n🔑 Login Credentials:");
+    console.log("┌─────────────┬──────────────────────────┬─────────────┐");
+    console.log("│ Role        │ Email                    │ Password    │");
+    console.log("├─────────────┼──────────────────────────┼─────────────┤");
+    console.log("│ Admin       │ admin@example.com        │ admin123    │");
+    console.log("│ Editor      │ editor@example.com       │ editor123   │");
+    console.log("│ Contributor │ contributor@example.com  │ contributor123 │");
+    console.log("│ Reader      │ reader@example.com       │ reader123   │");
+    console.log("└─────────────┴──────────────────────────┴─────────────┘");
+    
+    console.log("\n📅 Event Details:");
+    console.log(`  • Event: ${eventPost.title}`);
+    console.log(`  • Start: ${eventPost.eventStartDate?.toLocaleString('id-ID')}`);
+    console.log(`  • End: ${eventPost.eventEndDate?.toLocaleString('id-ID')}`);
+    console.log(`  • Location: ${eventPost.eventLocation}`);
+    console.log(`  • Max Participants: ${eventPost.eventMaxParticipants}`);
+    console.log(`  • Current Registrations: 3`);
+    
+    console.log("\n✨ Next Steps:");
+    console.log("  1. Start your development server: npm run dev");
+    console.log("  2. Login with any of the credentials above");
+    console.log("  3. Visit /blog to see the posts");
+    console.log("  4. Visit /events to see the workshop event");
+    console.log("  5. Try registering for the event!");
+    
   } catch (error) {
-    console.error("Error seeding database:", error);
+    console.error("\n❌ Error seeding database:", error);
+    throw error;
   }
 }
 
-seed();
+// Run the seed function
+seed()
+  .then(() => {
+    console.log("\n✅ Seed script completed successfully");
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error("\n❌ Seed script failed:", error);
+    process.exit(1);
+  });

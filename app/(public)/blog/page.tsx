@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Calendar, User, MessageCircle, Heart, Search, Filter, Clock, AlertCircle } from "lucide-react";
+import { Calendar, User, MessageCircle, Heart, Search, Filter, Clock, AlertCircle, CalendarDays, Tag } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import PageHeader from "@/components/(public)/layout/page-header";
@@ -31,6 +31,16 @@ interface BlogPost {
   featured: boolean;
   imageUrl: string;
   views?: number;
+  isEvent: boolean;
+  // Add event-related fields
+  eventStartDate?: string;
+  eventEndDate?: string;
+  eventLocation?: string;
+  eventMaxParticipants?: number;
+  eventIsActive?: boolean;
+  registrationCount?: number;
+  spotsRemaining?: number;
+  isFull?: boolean;
 }
 
 interface Category {
@@ -151,6 +161,29 @@ export default function BlogPage() {
     return url;
   };
 
+  // Function to format event date
+  const formatEventDate = (startDate?: string, endDate?: string) => {
+    if (!startDate) return "";
+    
+    const start = new Date(startDate);
+    const end = endDate ? new Date(endDate) : null;
+    
+    const options: Intl.DateTimeFormatOptions = { 
+      day: 'numeric', 
+      month: 'short', 
+      year: 'numeric' 
+    };
+    
+    const startStr = start.toLocaleDateString('id-ID', options);
+    
+    if (end && end.toDateString() !== start.toDateString()) {
+      const endStr = end.toLocaleDateString('id-ID', options);
+      return `${startStr} - ${endStr}`;
+    }
+    
+    return startStr;
+  };
+
   return (
     <div className="container max-w-6xl mx-auto px-4 py-8 md:py-12 lg:py-16">
       {/* Hero Section */}
@@ -179,7 +212,15 @@ export default function BlogPage() {
                   />
                   <div className="absolute inset-0 bg-linear-to-t from-black/70 to-transparent"></div>
                   <div className="absolute bottom-4 left-4 right-4">
-                    <Badge className="mb-2 bg-gold-500 hover:bg-gold-600 text-primary-foreground">Unggulan</Badge>
+                    <div className="flex gap-2 mb-2">
+                      <Badge className="bg-gold-500 hover:bg-gold-600 text-primary-foreground">Unggulan</Badge>
+                      {post.isEvent && (
+                        <Badge className="bg-primary/80 hover:bg-primary text-primary-foreground">
+                          <CalendarDays className="h-3 w-3 mr-1" />
+                          Event
+                        </Badge>
+                      )}
+                    </div>
                     <h3 className="text-lg md:text-xl font-bold text-white">{post.title}</h3>
                   </div>
                 </div>
@@ -188,10 +229,15 @@ export default function BlogPage() {
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div className="flex items-center text-sm text-muted-foreground">
                       <Calendar className="mr-1 h-4 w-4" />
-                      {post.date}
+                      {post.isEvent && post.eventStartDate 
+                        ? formatEventDate(post.eventStartDate, post.eventEndDate)
+                        : post.date
+                      }
                     </div>
                     <Button asChild className="bg-gold-500 hover:bg-gold-600 text-primary-foreground">
-                      <Link href={`/blog/${post.slug}`}>Baca Artikel</Link>
+                      <Link href={`/blog/${post.slug}`}>
+                        {post.isEvent ? "Lihat Event" : "Baca Artikel"}
+                      </Link>
                     </Button>
                   </div>
                 </CardContent>
@@ -264,21 +310,31 @@ export default function BlogPage() {
                         className="object-cover"
                         unoptimized // Add this to prevent Next.js optimization caching
                       />
-                      <div className="absolute top-4 right-4">
-                        <Badge className="bg-gold-500 hover:bg-gold-600 text-primary-foreground">
-                          {post.category}
-                        </Badge>
-                      </div>
+                      {post.isEvent && (
+                        <div className="absolute top-4 right-4">
+                          <Badge className="bg-primary/80 hover:bg-primary text-primary-foreground">
+                            <CalendarDays className="h-3 w-3 mr-1" />
+                            Event
+                          </Badge>
+                        </div>
+                      )}
                     </div>
                     <CardHeader className="pb-3">
                       <div className="flex items-center text-sm text-muted-foreground mb-2">
                         <Calendar className="mr-1 h-4 w-4" />
-                        {post.date}
+                        {post.isEvent && post.eventStartDate 
+                          ? formatEventDate(post.eventStartDate, post.eventEndDate)
+                          : post.date
+                        }
                         <span className="mx-2">•</span>
                         <Clock className="mr-1 h-4 w-4" />
                         {post.readTime}
                       </div>
                       <CardTitle className="text-lg md:text-xl line-clamp-2">{post.title}</CardTitle>
+                      <div className="flex items-center text-sm text-muted-foreground mt-2">
+                        <Tag className="mr-1 h-4 w-4" />
+                        {post.category}
+                      </div>
                     </CardHeader>
                     <CardContent className="pt-0 grow flex flex-col">
                       <CardDescription className="mb-4 grow line-clamp-3 text-sm md:text-base">
@@ -301,7 +357,9 @@ export default function BlogPage() {
                         </div>
                       </div>
                       <Button asChild className="w-full mt-4 bg-gold-500 hover:bg-gold-600 text-primary-foreground">
-                        <Link href={`/blog/${post.slug}`}>Baca Lebih Lanjut</Link>
+                        <Link href={`/blog/${post.slug}`}>
+                          {post.isEvent ? "Lihat Event" : "Baca Lebih Lanjut"}
+                        </Link>
                       </Button>
                     </CardContent>
                   </Card>

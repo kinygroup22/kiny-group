@@ -14,6 +14,23 @@ import { useState, useEffect } from "react";
 import { getThemeColors, createThemeCSSVariables } from "@/lib/theme-utils";
 import { ActivitiesSection } from "@/components/(public)/brand/ActivitiesSection";
 
+// Template functions for email and WhatsApp
+const createEmailTemplate = (brandName: string, email: string) => {
+  const subject = encodeURIComponent(`Inquiry about ${brandName}`);
+  const body = encodeURIComponent(`Hello,
+
+  I'm interested in learning more about ${brandName}. Could you please provide me with additional information?
+
+  Thank you,
+  [Your Name]`);
+    return `mailto:${email}?subject=${subject}&body=${body}`;
+};
+
+const createWhatsAppTemplate = (brandName: string) => {
+  const message = encodeURIComponent(`Hello, I would like to ask about "${brandName}"`);
+  return `https://wa.me/`;
+};
+
 export default function DivisionDetailPage() {
   const params = useParams();
   const [division, setDivision] = useState<BrandDivision & { 
@@ -79,6 +96,10 @@ export default function DivisionDetailPage() {
   }
 
   const theme = getThemeColors(division);
+
+  // Generate email and WhatsApp templates with the brand name
+  const emailTemplate = createEmailTemplate(division.name, division.email || "info@kcifoundation.org");
+  const whatsAppTemplate = createWhatsAppTemplate(division.name);
 
   return (
     <div 
@@ -173,48 +194,6 @@ export default function DivisionDetailPage() {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Coverage & Delivery */}
-      <section className="py-20 border-b border-border/50">
-        <div className="container mx-auto px-6 lg:px-12">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-              <div>
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: theme.primary }}>
-                    <MapPin className="h-7 w-7 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                      Geographic Coverage
-                    </p>
-                    <p className="text-2xl md:text-3xl font-bold">{division.coverage}</p>
-                  </div>
-                </div>
-                <p className="text-muted-foreground leading-relaxed">
-                  Our extensive network spans across continents, ensuring we can deliver exceptional service wherever you need us.
-                </p>
-              </div>
-              <div>
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: theme.primary }}>
-                    <Truck className="h-7 w-7 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                      Service Delivery
-                    </p>
-                    <p className="text-2xl md:text-3xl font-bold">{division.delivery}</p>
-                  </div>
-                </div>
-                <p className="text-muted-foreground leading-relaxed">
-                  We offer flexible delivery options tailored to your preferences, combining modern technology with personal touch.
-                </p>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -353,25 +332,34 @@ export default function DivisionDetailPage() {
         </div>
       </section>
 
-      {/* Contact Section */}
+      {/* UPDATED: Contact Section with dynamic data and templates */}
       <section className="py-24">
         <div className="container mx-auto px-6 lg:px-12">
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <div>
                 <p className="text-sm font-bold tracking-[0.3em] uppercase mb-4" style={{ color: theme.text }}>
-                  Let&apos;s Connect
+                  {division.contactTitle || "Let's Connect"}
                 </p>
-                <h2 className="text-4xl md:text-5xl font-bold mb-6">Get in Touch</h2>
+                <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                  {division.contactSubtitle || "Get in Touch"}
+                </h2>
                 <p className="text-xl text-muted-foreground leading-relaxed mb-12">
-                  Ready to start your journey with us? Our team is here to answer your questions and help you get started.
+                  {division.contactDescription || "Ready to start your journey with us? Our team is here to answer your questions and help you get started."}
                 </p>
 
                 <Button 
+                  asChild
                   className="text-white px-8 py-6 text-lg border-0 hover:opacity-90 shadow-xl"
                   style={{ backgroundColor: theme.primary }}
                 >
-                  Schedule Consultation
+                  <a 
+                    href={`${whatsAppTemplate}${(division.whatsapp || "+628123456789").replace(/[^\d+]/g, '')}?text=${encodeURIComponent(`Hello, I would like to ask about "${division.name}"`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {division.buttonText}
+                  </a>
                 </Button>
               </div>
 
@@ -382,9 +370,12 @@ export default function DivisionDetailPage() {
                     <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                       Email
                     </p>
-                    <p className="text-lg font-medium">
-                      info@kcifoundation.org
-                    </p>
+                    <a 
+                      href={emailTemplate}
+                      className="text-lg font-medium hover:underline"
+                    >
+                      {division.email || "info@kcifoundation.org"}
+                    </a>
                   </div>
                 </div>
 
@@ -392,9 +383,16 @@ export default function DivisionDetailPage() {
                   <Phone className="h-6 w-6 mt-1 shrink-0" style={{ color: theme.text }} />
                   <div>
                     <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                      Phone
+                      WhatsApp
                     </p>
-                    <p className="text-lg font-medium">+62 21 83787735</p>
+                    <a 
+                      href={`${whatsAppTemplate}${(division.whatsapp || "+628123456789").replace(/[^\d+]/g, '')}?text=${encodeURIComponent(`Hello, I would like to ask about "${division.name}"`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-lg font-medium hover:underline"
+                    >
+                      {division.whatsapp || "+628123456789"}
+                    </a>
                   </div>
                 </div>
 
@@ -404,9 +402,8 @@ export default function DivisionDetailPage() {
                     <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                       Address
                     </p>
-                    <p className="text-lg font-medium leading-relaxed">
-                      Jl. Tebet Timur Dalam II No.38B, Tebet,<br />
-                      Jakarta Selatan 12820
+                    <p className="text-lg font-medium leading-relaxed whitespace-pre-line">
+                      {division.address || "Jl. Tebet Timur Dalam II No.38B, Tebet,\nJakarta Selatan 12820"}
                     </p>
                   </div>
                 </div>

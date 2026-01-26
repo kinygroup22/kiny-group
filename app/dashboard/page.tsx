@@ -2,8 +2,8 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { blogPosts, blogComments, users, brandDivisions } from "@/lib/db/schema";
-import { count, sql, gte, desc } from "drizzle-orm";
+import { blogPosts, blogComments, users, brandDivisions, eventRegistrations } from "@/lib/db/schema";
+import { count, sql, gte, desc, between, and, eq } from "drizzle-orm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,12 +12,21 @@ import {
   FileText, 
   MessageSquare, 
   Users, 
-  Building2,
-  RefreshCw
+  RefreshCw,
+  UserPlus,
+  Calendar,
+  CalendarDays
 } from "lucide-react";
 import { Suspense } from "react";
 import { ActivityFeed } from "./components/activity-feed";
 import { Activity as ActivityType, GroupedActivities } from "./types";
+import { RegistrationChart } from "@/components/dashboard/registration-chart";
+
+// Define the type for registration data
+interface RegistrationData {
+  date: string;
+  count: number;
+}
 
 // Format time difference
 function formatTimeDiff(date: Date) {
@@ -76,26 +85,95 @@ async function getDashboardData() {
   const lastMonth = new Date();
   lastMonth.setMonth(lastMonth.getMonth() - 1);
 
-  // Fetch all data in parallel
+  // Get dates for chart data (last 30 days by default)
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  // Build the conditions for contributors
+  const contributorCondition = user.role === "contributor" 
+    ? eq(blogPosts.authorId, user.id) 
+    : undefined;
+
+  // Get total event registrations
+  const totalRegistrations = await db
+    .select({ count: count() })
+    .from(eventRegistrations)
+    .where(
+      user.role === "contributor" 
+        ? sql`${eventRegistrations.postId} IN (SELECT id FROM ${blogPosts} WHERE ${blogPosts.authorId} = ${user.id})`
+        : undefined
+    );
+
+  // Get registrations grouped by date for chart
+  const registrationDataRaw = await db
+    .select({
+      date: sql`DATE(${eventRegistrations.registeredAt})`.as('date'),
+      count: count(),
+    })
+    .from(eventRegistrations)
+    .where(
+      and(
+        gte(eventRegistrations.registeredAt, thirtyDaysAgo),
+        user.role === "contributor" 
+          ? sql`${eventRegistrations.postId} IN (SELECT id FROM ${blogPosts} WHERE ${blogPosts.authorId} = ${user.id})`
+          : undefined
+      )
+    )
+    .groupBy(sql`DATE(${eventRegistrations.registeredAt})`)
+    .orderBy(sql`DATE(${eventRegistrations.registeredAt})`);
+
+  // Get active events count
+  const activeEvents = await db
+    .select({ count: count() })
+    .from(blogPosts)
+    .where(
+      and(
+        eq(blogPosts.isEvent, true),
+        eq(blogPosts.eventIsActive, true),
+        contributorCondition
+      )
+    );
+
+  // Get total events count
+  const totalEvents = await db
+    .select({ count: count() })
+    .from(blogPosts)
+    .where(
+      and(
+        eq(blogPosts.isEvent, true),
+        contributorCondition
+      )
+    );
+
+  // Get last month event registrations for comparison
+  const lastMonthEventRegistrations = await db
+    .select({ count: count() })
+    .from(eventRegistrations)
+    .where(
+      and(
+        gte(eventRegistrations.registeredAt, lastMonth),
+        user.role === "contributor" 
+          ? sql`${eventRegistrations.postId} IN (SELECT id FROM ${blogPosts} WHERE ${blogPosts.authorId} = ${user.id})`
+          : undefined
+      )
+    );
+
+  // Fetch all other data in parallel
   const [
     totalPosts,
     totalComments,
     totalUsers,
-    totalDivisions,
     lastMonthPosts,
     lastMonthComments,
     lastMonthUsers,
-    lastMonthDivisions,
     recentPosts,
     recentComments,
     recentUsers,
-    recentBrands,
   ] = await Promise.all([
     // Current totals
     db.select({ count: count() }).from(blogPosts),
     db.select({ count: count() }).from(blogComments),
     db.select({ count: count() }).from(users),
-    db.select({ count: count() }).from(brandDivisions),
     
     // Last month counts for comparison
     db.select({ count: count() })
@@ -107,9 +185,6 @@ async function getDashboardData() {
     db.select({ count: count() })
       .from(users)
       .where(gte(users.createdAt, lastMonth)),
-    db.select({ count: count() })
-      .from(brandDivisions)
-      .where(gte(brandDivisions.createdAt, lastMonth)),
 
     // Recent activity data
     db.select({
@@ -152,19 +227,13 @@ async function getDashboardData() {
       .from(users)
       .orderBy(desc(users.createdAt))
       .limit(20),
-
-    db.select({
-      id: brandDivisions.id,
-      name: brandDivisions.name,
-      createdAt: brandDivisions.updatedAt,
-      authorName: users.name,
-      authorEmail: users.email,
-    })
-      .from(brandDivisions)
-      .leftJoin(users, sql`${brandDivisions.authorId} = ${users.id}`)
-      .orderBy(desc(brandDivisions.updatedAt))
-      .limit(20),
   ]);
+
+  // Format the registration data
+  const registrationData = registrationDataRaw.map(item => ({
+    date: String(item.date),
+    count: item.count
+  }));
 
   // Calculate percentage changes
   const calculateChange = (current: number, lastMonth: number) => {
@@ -194,10 +263,13 @@ async function getDashboardData() {
       icon: Users
     },
     { 
-      label: 'Divisions', 
-      value: totalDivisions[0].count.toString(), 
-      change: calculateChange(totalDivisions[0].count, lastMonthDivisions[0].count),
-      icon: Building2
+      label: 'Event Registrations', 
+      value: totalRegistrations[0].count.toString(), 
+      change: calculateChange(
+        totalRegistrations[0].count, 
+        lastMonthEventRegistrations[0].count
+      ),
+      icon: CalendarDays
     },
   ];
 
@@ -247,18 +319,6 @@ async function getDashboardData() {
         role: u.role
       }
     })),
-    ...recentBrands.map(brand => ({
-      id: `brand-${brand.id}`,
-      type: 'brand' as const,
-      action: `Updated brand division: "${brand.name}"`,
-      time: formatTimeDiff(brand.createdAt),
-      user: brand.authorName || brand.authorEmail || 'Unknown',
-      userEmail: brand.authorEmail || undefined, // Convert null to undefined
-      createdAt: brand.createdAt,
-      details: {
-        name: brand.name
-      }
-    })),
   ];
 
   // Sort by date
@@ -268,12 +328,23 @@ async function getDashboardData() {
     user,
     statsData,
     activities,
-    groupedActivities: groupActivitiesByDate(activities)
+    groupedActivities: groupActivitiesByDate(activities),
+    registrationData,
+    activeEvents: activeEvents[0].count,
+    totalEvents: totalEvents[0].count
   };
 }
 
 export default async function DashboardPage() {
-  const { user, statsData, activities, groupedActivities } = await getDashboardData();
+  const { 
+    user, 
+    statsData, 
+    activities, 
+    groupedActivities, 
+    registrationData,
+    activeEvents,
+    totalEvents
+  } = await getDashboardData();
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -321,6 +392,36 @@ export default async function DashboardPage() {
         })}
       </div>
 
+      {/* Event Registration Chart */}
+      <Card className="py-6 mb-8">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <CalendarDays className="h-5 w-5" />
+                Event Registrations
+              </CardTitle>
+              <CardDescription>Registration trends over time</CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                Last 30 days
+              </Badge>
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {activeEvents} active events
+              </Badge>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Suspense fallback={<div>Loading chart...</div>}>
+            <RegistrationChart data={registrationData} />
+          </Suspense>
+        </CardContent>
+      </Card>
+
       {/* Two column grid */}
       <div className="grid gap-6 md:grid-cols-2 mb-8">
         {/* Profile Information */}
@@ -347,60 +448,24 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Access Level */}
+        {/* Events Information */}
         <Card className="py-6">
           <CardHeader>
-            <CardTitle>Access Level</CardTitle>
-            <CardDescription>What you can do</CardDescription>
+            <CardTitle>Events Information</CardTitle>
+            <CardDescription>Current event statistics</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {user.role === "admin" && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                    <p className="text-sm text-foreground">Full system access</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                    <p className="text-sm text-foreground">User management</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                    <p className="text-sm text-foreground">Content management</p>
-                  </div>
-                </>
-              )}
-              {user.role === "editor" && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-blue-500" />
-                    <p className="text-sm text-foreground">Edit all content</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-blue-500" />
-                    <p className="text-sm text-foreground">Publish articles</p>
-                  </div>
-                </>
-              )}
-              {user.role === "contributor" && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                    <p className="text-sm text-foreground">Create content</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                    <p className="text-sm text-foreground">Submit for review</p>
-                  </div>
-                </>
-              )}
-              {user.role === "reader" && (
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-gray-500" />
-                  <p className="text-sm text-foreground">View content</p>
-                </div>
-              )}
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Total Events</p>
+              <Badge variant="outline">{totalEvents}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Active Events</p>
+              <Badge variant="default">{activeEvents}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Total Registrations</p>
+              <Badge variant="secondary">{registrationData.reduce((sum, item) => sum + item.count, 0)}</Badge>
             </div>
           </CardContent>
         </Card>

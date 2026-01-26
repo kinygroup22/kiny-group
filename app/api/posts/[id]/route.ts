@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/api/posts/[id]/route.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { blogPosts, blogComments, blogPostLikes, blogPostViews } from "@/lib/db/schema";
+import { blogPosts, blogComments, blogPostLikes, blogPostViews, eventRegistrations } from "@/lib/db/schema";
 import { requireContributor } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -16,6 +16,13 @@ export async function GET(
     const user = await requireContributor();
     const { id } = await params;
     const postId = parseInt(id);
+
+    if (isNaN(postId)) {
+      return NextResponse.json(
+        { error: "Invalid post ID" },
+        { status: 400 }
+      );
+    }
 
     const post = await db
       .select()
@@ -59,12 +66,19 @@ export async function GET(
 // Shared update logic for both PATCH and PUT
 async function updatePost(
   request: NextRequest,
-  params: Promise<{ id: string }>
+  params: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await requireContributor();
-    const { id } = await params;
+    const { id } = await params.params;
     const postId = parseInt(id);
+
+    if (isNaN(postId)) {
+      return NextResponse.json(
+        { error: "Invalid post ID" },
+        { status: 400 }
+      );
+    }
 
     const body = await request.json();
 
@@ -108,21 +122,88 @@ async function updatePost(
       }
     }
 
+    // Validate event fields if isEvent is true
+    if (body.isEvent) {
+      if (!body.eventStartDate) {
+        return NextResponse.json(
+          { error: "Event start date is required for events." },
+          { status: 400 }
+        );
+      }
+      if (!body.eventEndDate) {
+        return NextResponse.json(
+          { error: "Event end date is required for events." },
+          { status: 400 }
+        );
+      }
+      
+      const startDate = new Date(body.eventStartDate);
+      const endDate = new Date(body.eventEndDate);
+      
+      if (endDate <= startDate) {
+        return NextResponse.json(
+          { error: "Event end date must be after start date." },
+          { status: 400 }
+        );
+      }
+      
+      if (body.eventMaxParticipants && body.eventMaxParticipants < 1) {
+        return NextResponse.json(
+          { error: "Maximum participants must be at least 1." },
+          { status: 400 }
+        );
+      }
+    }
+
     // Only admins and editors can publish
     const canPublish = user.role === "admin" || user.role === "editor";
     
     // Prepare update data
     const updateData: any = {
-      title: body.title,
-      slug: body.slug,
-      excerpt: body.excerpt || null,
-      content: body.content,
-      featuredImage: body.featuredImage || null,
-      featured: body.featured || false,
-      category: body.category || null,
-      readTime: body.readTime || 5,
       updatedAt: new Date(),
     };
+
+    // Only update fields that are provided
+    if (body.title !== undefined) updateData.title = body.title;
+    if (body.slug !== undefined) updateData.slug = body.slug;
+    if (body.excerpt !== undefined) updateData.excerpt = body.excerpt || null;
+    if (body.content !== undefined) updateData.content = body.content;
+    if (body.featuredImage !== undefined) updateData.featuredImage = body.featuredImage || null;
+    if (body.featured !== undefined) updateData.featured = body.featured;
+    if (body.category !== undefined) updateData.category = body.category || null;
+    if (body.readTime !== undefined) updateData.readTime = body.readTime;
+    if (body.isEvent !== undefined) updateData.isEvent = body.isEvent;
+
+    // Handle event fields
+    if (body.isEvent) {
+      if (body.eventStartDate !== undefined) {
+        updateData.eventStartDate = new Date(body.eventStartDate);
+      }
+      if (body.eventEndDate !== undefined) {
+        updateData.eventEndDate = new Date(body.eventEndDate);
+      }
+      if (body.eventLocation !== undefined) {
+        updateData.eventLocation = body.eventLocation || null;
+      }
+      if (body.eventMaxParticipants !== undefined) {
+        updateData.eventMaxParticipants = body.eventMaxParticipants 
+          ? parseInt(body.eventMaxParticipants.toString()) 
+          : null;
+      }
+      if (body.eventIsActive !== undefined) {
+        updateData.eventIsActive = body.eventIsActive;
+      }
+      if (body.eventRegistrationForm !== undefined) {
+        updateData.eventRegistrationForm = body.eventRegistrationForm;
+      }
+    } else if (body.isEvent === false) {
+      // If changing from event to regular post, clear event fields
+      updateData.eventStartDate = null;
+      updateData.eventEndDate = null;
+      updateData.eventLocation = null;
+      updateData.eventMaxParticipants = null;
+      updateData.eventIsActive = false;
+    }
 
     // Handle publishing
     if (body.published !== undefined) {
@@ -130,13 +211,8 @@ async function updatePost(
         updateData.publishedAt = existingPost.publishedAt || new Date();
       } else if (!body.published) {
         updateData.publishedAt = null;
-      } else {
-        // Keep existing publishedAt if user can't publish
-        updateData.publishedAt = existingPost.publishedAt;
       }
-    } else {
-      // Keep existing publishedAt if not specified
-      updateData.publishedAt = existingPost.publishedAt;
+      // If user can't publish, ignore the request
     }
 
     // Update the post
@@ -150,6 +226,9 @@ async function updatePost(
     revalidatePath("/blog");
     revalidatePath("/dashboard/posts");
     revalidatePath(`/blog/${updatedPost[0].slug}`);
+    if (updatedPost[0].isEvent) {
+      revalidatePath("/events");
+    }
 
     return NextResponse.json({
       message: "Post updated successfully",
@@ -175,7 +254,7 @@ async function updatePost(
 // UPDATE a post (PATCH method)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  params: { params: Promise<{ id: string }> }
 ) {
   return updatePost(request, params);
 }
@@ -183,7 +262,7 @@ export async function PATCH(
 // UPDATE a post (PUT method - for compatibility)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  params: { params: Promise<{ id: string }> }
 ) {
   return updatePost(request, params);
 }
@@ -197,6 +276,13 @@ export async function DELETE(
     const user = await requireContributor();
     const { id } = await params;
     const postId = parseInt(id);
+
+    if (isNaN(postId)) {
+      return NextResponse.json(
+        { error: "Invalid post ID" },
+        { status: 400 }
+      );
+    }
 
     // Get the existing post
     const existingPosts = await db
@@ -227,10 +313,33 @@ export async function DELETE(
       );
     }
 
-    // Delete associated data (comments, likes, views)
+    // Check if event has registrations
+    if (existingPost.isEvent) {
+      const registrations = await db
+        .select({ count: eventRegistrations.id })
+        .from(eventRegistrations)
+        .where(eq(eventRegistrations.postId, postId));
+
+      if (registrations.length > 0) {
+        return NextResponse.json(
+          { 
+            error: "Cannot delete event with existing registrations. Please deactivate the event instead.",
+            hasRegistrations: true 
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Delete associated data (cascading deletes will handle most of this, but explicit is better)
     await db.delete(blogComments).where(eq(blogComments.postId, postId));
     await db.delete(blogPostLikes).where(eq(blogPostLikes.postId, postId));
     await db.delete(blogPostViews).where(eq(blogPostViews.postId, postId));
+    
+    // Delete event registrations if this post is an event
+    if (existingPost.isEvent) {
+      await db.delete(eventRegistrations).where(eq(eventRegistrations.postId, postId));
+    }
 
     // Delete the post
     await db.delete(blogPosts).where(eq(blogPosts.id, postId));
@@ -238,9 +347,12 @@ export async function DELETE(
     // Revalidate paths
     revalidatePath("/blog");
     revalidatePath("/dashboard/posts");
+    if (existingPost.isEvent) {
+      revalidatePath("/events");
+    }
 
     return NextResponse.json({
-      message: "Post deleted successfully",
+      message: existingPost.isEvent ? "Event deleted successfully" : "Post deleted successfully",
     });
   } catch (error) {
     console.error("Error deleting post:", error);

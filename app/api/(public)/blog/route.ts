@@ -1,8 +1,8 @@
 // app/api/(public)/blog/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { blogPosts, users } from "@/lib/db/schema";
-import { eq, and, isNotNull, desc, ilike, or, SQL } from "drizzle-orm";
+import { blogPosts, users, blogCategories, blogPostCategories, eventRegistrations } from "@/lib/db/schema";
+import { eq, and, isNotNull, desc, ilike, or, SQL, count } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 
 // Cache blog posts data for better performance
@@ -48,6 +48,13 @@ const getBlogPosts = unstable_cache(
           createdAt: blogPosts.createdAt,
           updatedAt: blogPosts.updatedAt,
           featuredImage: blogPosts.featuredImage,
+          isEvent: blogPosts.isEvent,
+          // Event-specific fields
+          eventStartDate: blogPosts.eventStartDate,
+          eventEndDate: blogPosts.eventEndDate,
+          eventLocation: blogPosts.eventLocation,
+          eventMaxParticipants: blogPosts.eventMaxParticipants,
+          eventIsActive: blogPosts.eventIsActive,
           author: {
             id: users.id,
             name: users.name,
@@ -62,8 +69,50 @@ const getBlogPosts = unstable_cache(
         .limit(limit || 10)
         .offset(offset || 0);
 
+      // Get categories for each post
+      const postsWithCategories = await Promise.all(
+        posts.map(async (post) => {
+          const categories = await db
+            .select({
+              id: blogCategories.id,
+              name: blogCategories.name,
+              slug: blogCategories.slug,
+            })
+            .from(blogPostCategories)
+            .innerJoin(blogCategories, eq(blogPostCategories.categoryId, blogCategories.id))
+            .where(eq(blogPostCategories.postId, post.id));
+
+          // Get registration count if it's an event
+          let registrationCount = 0;
+          let spotsRemaining = null;
+          let isFull = false;
+          
+          if (post.isEvent && post.eventIsActive) {
+            const [result] = await db
+              .select({ count: count() })
+              .from(eventRegistrations)
+              .where(eq(eventRegistrations.postId, post.id));
+            
+            registrationCount = result.count;
+            
+            if (post.eventMaxParticipants) {
+              spotsRemaining = post.eventMaxParticipants - registrationCount;
+              isFull = registrationCount >= post.eventMaxParticipants;
+            }
+          }
+
+          return {
+            ...post,
+            categories,
+            registrationCount,
+            spotsRemaining,
+            isFull,
+          };
+        })
+      );
+
       // Format response to match frontend expectations
-      return posts.map(post => ({
+      return postsWithCategories.map(post => ({
         id: post.id.toString(),
         title: post.title,
         slug: post.slug,
@@ -75,6 +124,7 @@ const getBlogPosts = unstable_cache(
           : '/placeholder-blog.jpg',
         featured: post.featured || false,
         category: post.category || 'Uncategorized',
+        categories: post.categories || [],
         readTime: post.readTime ? `${post.readTime} menit baca` : '5 menit baca',
         likes: post.likes || 0,
         comments: post.commentsCount || 0,
@@ -87,6 +137,16 @@ const getBlogPosts = unstable_cache(
         authorId: post.authorId?.toString(),
         createdAt: post.createdAt?.toISOString(),
         updatedAt: post.updatedAt?.toISOString(),
+        // Event fields
+        isEvent: post.isEvent || false,
+        eventStartDate: post.eventStartDate?.toISOString(),
+        eventEndDate: post.eventEndDate?.toISOString(),
+        eventLocation: post.eventLocation,
+        eventMaxParticipants: post.eventMaxParticipants,
+        eventIsActive: post.eventIsActive,
+        registrationCount: post.registrationCount,
+        spotsRemaining: post.spotsRemaining,
+        isFull: post.isFull,
       }));
     } catch (error) {
       console.error("Error fetching blog posts:", error);

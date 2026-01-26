@@ -55,8 +55,6 @@ export function DivisionForm({ user, division }: DivisionFormProps) {
     tagline: division?.tagline || "",
     description: division?.description || "",
     fullDescription: division?.fullDescription || "",
-    coverage: division?.coverage || "",
-    delivery: division?.delivery || "",
     backgroundImage: division?.backgroundImage || "",
     logo: division?.logo || "",
     color: division?.color || "#3b82f6",
@@ -321,29 +319,6 @@ export function DivisionForm({ user, division }: DivisionFormProps) {
               onChange={handleInputChange}
               placeholder="Brief tagline for the division"
             />
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="coverage">Coverage Area</Label>
-              <Input
-                id="coverage"
-                name="coverage"
-                value={formData.coverage}
-                onChange={handleInputChange}
-                placeholder="e.g., Indonesia, Southeast Asia"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="delivery">Delivery Time</Label>
-              <Input
-                id="delivery"
-                name="delivery"
-                value={formData.delivery}
-                onChange={handleInputChange}
-                placeholder="e.g., 24-48 hours"
-              />
-            </div>
           </div>
 
           <div className="space-y-2">

@@ -27,7 +27,6 @@ import {
   Save, 
   Eye, 
   AlertCircle, 
-  Upload, 
   X, 
   Image,
   Calendar,
@@ -42,7 +41,9 @@ import {
   Facebook,
   Twitter,
   Linkedin,
-  Link2
+  CalendarDays,
+  MapPin,
+  Users
 } from "lucide-react";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
@@ -83,6 +84,13 @@ export function PostForm({ user, post }: PostFormProps) {
     category: post?.category || "",
     readTime: post?.readTime || 5,
     published: !!post?.publishedAt || false,
+    isEvent: post?.isEvent || false,
+    // ADD EVENT FIELDS
+    eventStartDate: post?.eventStartDate ? new Date(post.eventStartDate).toISOString().slice(0, 16) : "",
+    eventEndDate: post?.eventEndDate ? new Date(post.eventEndDate).toISOString().slice(0, 16) : "",
+    eventLocation: post?.eventLocation || "",
+    eventMaxParticipants: post?.eventMaxParticipants || null,
+    eventIsActive: post?.eventIsActive ?? true,
   });
 
   // Fetch categories on mount
@@ -224,6 +232,29 @@ export function PostForm({ user, post }: PostFormProps) {
     setError("");
 
     try {
+      // Validate event fields if isEvent is true
+      if (formData.isEvent) {
+        if (!formData.eventStartDate) {
+          setError("Event start date is required for events");
+          setLoading(false);
+          return;
+        }
+        if (!formData.eventEndDate) {
+          setError("Event end date is required for events");
+          setLoading(false);
+          return;
+        }
+        
+        const startDate = new Date(formData.eventStartDate);
+        const endDate = new Date(formData.eventEndDate);
+        
+        if (endDate <= startDate) {
+          setError("Event end date must be after start date");
+          setLoading(false);
+          return;
+        }
+      }
+
       const url = isEditing ? `/api/posts/${post.id}` : "/api/posts";
       const method = isEditing ? "PATCH" : "POST";
 
@@ -236,6 +267,16 @@ export function PostForm({ user, post }: PostFormProps) {
         body: JSON.stringify({
           ...formData,
           published: publishStatus,
+          // Convert dates to ISO string for API
+          eventStartDate: formData.isEvent && formData.eventStartDate 
+            ? new Date(formData.eventStartDate).toISOString() 
+            : null,
+          eventEndDate: formData.isEvent && formData.eventEndDate 
+            ? new Date(formData.eventEndDate).toISOString() 
+            : null,
+          eventMaxParticipants: formData.isEvent && formData.eventMaxParticipants 
+            ? parseInt(formData.eventMaxParticipants.toString()) 
+            : null,
         }),
       });
 
@@ -465,6 +506,135 @@ export function PostForm({ user, post }: PostFormProps) {
                   />
                 </div>
 
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="isEvent" className="flex items-center gap-2">
+                      <CalendarDays className="h-4 w-4" />
+                      Event Post
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Enable event registration for this post
+                    </p>
+                  </div>
+                  <Switch
+                    id="isEvent"
+                    checked={formData.isEvent}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, isEvent: checked })
+                    }
+                  />
+                </div>
+
+                {formData.isEvent && (
+                  <Card className="border py-6">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <CalendarDays className="h-5 w-5" />
+                        Event Settings
+                      </CardTitle>
+                      <CardDescription>
+                        Configure event details and registration settings
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="eventStartDate" className="flex items-center gap-2">
+                            Start Date & Time *
+                          </Label>
+                          <Input
+                            id="eventStartDate"
+                            type="datetime-local"
+                            value={formData.eventStartDate}
+                            onChange={(e) =>
+                              setFormData({ ...formData, eventStartDate: e.target.value })
+                            }
+                            required={formData.isEvent}
+                            className="w-full"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="eventEndDate" className="flex items-center gap-2">
+                            End Date & Time *
+                          </Label>
+                          <Input
+                            id="eventEndDate"
+                            type="datetime-local"
+                            value={formData.eventEndDate}
+                            onChange={(e) =>
+                              setFormData({ ...formData, eventEndDate: e.target.value })
+                            }
+                            required={formData.isEvent}
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="eventLocation">
+                          Location
+                        </Label>
+                        <Input
+                          id="eventLocation"
+                          value={formData.eventLocation}
+                          onChange={(e) =>
+                            setFormData({ ...formData, eventLocation: e.target.value })
+                          }
+                          placeholder="e.g., Online (Zoom), Hotel Mulia Jakarta, etc."
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Specify where the event will take place
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="eventMaxParticipants">
+                          Maximum Participants
+                        </Label>
+                        <Input
+                          id="eventMaxParticipants"
+                          type="number"
+                          min="1"
+                          value={formData.eventMaxParticipants || ""}
+                          onChange={(e) =>
+                            setFormData({ 
+                              ...formData, 
+                              eventMaxParticipants: e.target.value ? parseInt(e.target.value) : null 
+                            })}
+                          placeholder="Leave empty for unlimited"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Set a limit for event registrations (optional)
+                        </p>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-2 border-t">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="eventIsActive">Event Active</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Allow users to register for this event
+                          </p>
+                        </div>
+                        <Switch
+                          id="eventIsActive"
+                          checked={formData.eventIsActive}
+                          onCheckedChange={(checked) =>
+                            setFormData({ ...formData, eventIsActive: checked })
+                          }
+                        />
+                      </div>
+
+                      <Alert>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          Users will be able to register for this event. You can manage registrations from the posts dashboard.
+                        </AlertDescription>
+                      </Alert>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {canPublish && (
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
@@ -518,6 +688,13 @@ export function PostForm({ user, post }: PostFormProps) {
                   {formData.category && (
                     <Badge className="mb-4 bg-primary hover:bg-primary/90 text-primary-foreground border-0 shadow-lg text-sm px-4 py-1">
                       {categories.find(c => c.slug === formData.category)?.name || formData.category}
+                    </Badge>
+                  )}
+                  
+                  {formData.isEvent && (
+                    <Badge className="mb-4 ml-2 bg-green-600 hover:bg-green-700 text-white border-0 shadow-lg text-sm px-4 py-1">
+                      <CalendarDays className="h-3 w-3 mr-1" />
+                      Event
                     </Badge>
                   )}
                   
@@ -579,6 +756,70 @@ export function PostForm({ user, post }: PostFormProps) {
                   )}
 
                   <CardContent className="p-6 md:p-10 space-y-8">
+                    {/* Event Registration Button */}
+                    {formData.isEvent && (
+                      <Card className="border bg-card">
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between gap-4 flex-wrap">
+                            <div className="flex-1 space-y-3">
+                              <h3 className="text-xl font-bold flex items-center gap-2">
+                                <CalendarDays className="h-6 w-6" />
+                                Event Details
+                              </h3>
+                              
+                              <div className="space-y-2 text-sm">
+                                {formData.eventStartDate && formData.eventEndDate && (
+                                  <div className="flex items-start gap-2">
+                                    <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                    <div>
+                                      <p className="font-medium">
+                                        {new Date(formData.eventStartDate).toLocaleDateString('en-US', {
+                                          weekday: 'long',
+                                          year: 'numeric',
+                                          month: 'long',
+                                          day: 'numeric'
+                                        })}
+                                      </p>
+                                      <p className="text-muted-foreground">
+                                        {new Date(formData.eventStartDate).toLocaleTimeString('en-US', {
+                                          hour: '2-digit',
+                                          minute: '2-digit'
+                                        })}
+                                        {' - '}
+                                        {new Date(formData.eventEndDate).toLocaleTimeString('en-US', {
+                                          hour: '2-digit',
+                                          minute: '2-digit'
+                                        })}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {formData.eventLocation && (
+                                  <div className="flex items-center gap-2">
+                                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                                    <span>{formData.eventLocation}</span>
+                                  </div>
+                                )}
+                                
+                                {formData.eventMaxParticipants && (
+                                  <div className="flex items-center gap-2">
+                                    <Users className="h-4 w-4 text-muted-foreground" />
+                                    <span>Limited to {formData.eventMaxParticipants} participants</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <Button size="lg">
+                              Register for Event
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+
                     {/* Floating Action Bar */}
                     <div className="sticky top-4 float-right ml-4 mb-4 flex flex-col gap-2 z-20">
                       <Button
@@ -631,6 +872,14 @@ export function PostForm({ user, post }: PostFormProps) {
                           >
                             #{categories.find(c => c.slug === formData.category)?.name || formData.category}
                           </Badge>
+                          {formData.isEvent && (
+                            <Badge 
+                              variant="outline" 
+                              className="bg-green-100 hover:bg-green-200 dark:bg-green-900/30 dark:hover:bg-green-900/50 border-green-300 dark:border-green-700 text-green-700 dark:text-green-400 px-3 py-1 text-sm transition-colors cursor-pointer"
+                            >
+                              #event
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     )}

@@ -9,6 +9,7 @@ import {
   MessageCircle, 
   TrendingUp,
   FileText,
+  CalendarDays,
   Plus,
 } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/layout/dashboard-header";
@@ -18,13 +19,12 @@ import Link from "next/link";
 // Server component to fetch data
 async function getPostsData(user: any) {
   try {
-    // Import db only in server context
     const { db } = await import("@/lib/db");
-    const { blogPosts, users } = await import("@/lib/db/schema");
-    const { eq, desc } = await import("drizzle-orm");
+    const { blogPosts, users, eventRegistrations } = await import("@/lib/db/schema");
+    const { eq, desc, count, sql } = await import("drizzle-orm");
     
-    // Fetch all posts with author information and statistics
-    const posts = await db
+    // Fetch all posts with author information
+    const postsQuery = await db
       .select({
         id: blogPosts.id,
         title: blogPosts.title,
@@ -43,15 +43,42 @@ async function getPostsData(user: any) {
         authorName: users.name,
         authorEmail: users.email,
         authorImage: users.image,
+        isEvent: blogPosts.isEvent,
+        // Event fields
+        eventStartDate: blogPosts.eventStartDate,
+        eventEndDate: blogPosts.eventEndDate,
+        eventLocation: blogPosts.eventLocation,
+        eventMaxParticipants: blogPosts.eventMaxParticipants,
+        eventIsActive: blogPosts.eventIsActive,
       })
       .from(blogPosts)
       .leftJoin(users, eq(blogPosts.authorId, users.id))
       .orderBy(desc(blogPosts.createdAt));
 
+    // Get registration counts for events
+    const registrationCounts = await db
+      .select({
+        postId: eventRegistrations.postId,
+        count: count(),
+      })
+      .from(eventRegistrations)
+      .groupBy(eventRegistrations.postId);
+
+    // Create a map of registration counts
+    const registrationCountMap = new Map(
+      registrationCounts.map(r => [r.postId, r.count])
+    );
+
+    // Merge registration counts with posts
+    const postsWithRegistrations = postsQuery.map(post => ({
+      ...post,
+      registrationCount: post.isEvent ? (registrationCountMap.get(post.id) || 0) : 0,
+    }));
+
     // Filter posts based on user role
     const filteredPosts = user.role === "contributor" 
-      ? posts.filter(post => post.authorId === user.id)
-      : posts;
+      ? postsWithRegistrations.filter(post => post.authorId === user.id)
+      : postsWithRegistrations;
 
     // Calculate total statistics
     const totalStats = filteredPosts.reduce((acc, post) => ({
@@ -60,15 +87,16 @@ async function getPostsData(user: any) {
       comments: acc.comments + (post.commentsCount || 0),
       published: acc.published + (post.publishedAt ? 1 : 0),
       drafts: acc.drafts + (post.publishedAt ? 0 : 1),
-    }), { views: 0, likes: 0, comments: 0, published: 0, drafts: 0 });
+      events: acc.events + (post.isEvent ? 1 : 0),
+      activeEvents: acc.activeEvents + (post.isEvent && post.eventIsActive ? 1 : 0),
+    }), { views: 0, likes: 0, comments: 0, published: 0, drafts: 0, events: 0, activeEvents: 0 });
 
     return { posts: filteredPosts, totalStats };
   } catch (error) {
     console.error("Error fetching posts:", error);
-    // Return empty data if there's an error
     return { 
       posts: [], 
-      totalStats: { views: 0, likes: 0, comments: 0, published: 0, drafts: 0 } 
+      totalStats: { views: 0, likes: 0, comments: 0, published: 0, drafts: 0, events: 0, activeEvents: 0 } 
     };
   }
 }
@@ -84,7 +112,7 @@ export default async function PostsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <DashboardHeader   
           title="Posts Management"
-          description="Create, edit and manage your blog posts"
+          description="Create, edit and manage your blog posts and events"
           icon={FileText}
         />
         <Link href="/dashboard/posts/new">
@@ -96,8 +124,8 @@ export default async function PostsPage() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-        <Card className="border-0 shadow-md bg-linear-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+        <Card className="border-0 shadow-md bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -113,7 +141,7 @@ export default async function PostsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-md bg-linear-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900">
+        <Card className="border-0 shadow-md bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -129,7 +157,7 @@ export default async function PostsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-md bg-linear-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900">
+        <Card className="border-0 shadow-md bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -145,7 +173,7 @@ export default async function PostsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-md bg-linear-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900">
+        <Card className="border-0 shadow-md bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -161,7 +189,7 @@ export default async function PostsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-md bg-linear-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900">
+        <Card className="border-0 shadow-md bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -172,6 +200,25 @@ export default async function PostsPage() {
               </div>
               <div className="h-12 w-12 rounded-full bg-yellow-600 dark:bg-yellow-500 flex items-center justify-center">
                 <MessageCircle className="h-6 w-6 text-white" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-md bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950 dark:to-indigo-900">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">Events</p>
+                <h3 className="text-2xl font-bold text-indigo-900 dark:text-indigo-100 mt-1">
+                  {totalStats.events}
+                </h3>
+                <p className="text-xs text-indigo-500 dark:text-indigo-400 mt-1">
+                  {totalStats.activeEvents} active
+                </p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-indigo-600 dark:bg-indigo-500 flex items-center justify-center">
+                <CalendarDays className="h-6 w-6 text-white" />
               </div>
             </div>
           </CardContent>
