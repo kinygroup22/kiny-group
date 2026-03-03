@@ -15,7 +15,7 @@ export default function Home() {
         {/* Parallax Background Image */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-fixed"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=2070&q=80')" }}
+          style={{ backgroundImage: "url('/assets/home-bg.png')" }}
         />
         
         {/* Overlay to make text readable */}

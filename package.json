@@ -11,6 +11,8 @@
     "db:seed-about": "tsx scripts/seed-about.ts",
     "db:seed-brands": "tsx scripts/seed-brands.ts",
     "db:seed-partners": "tsx scripts/seed-partners.ts",
+    "db:seed-journey": "tsx scripts/seed-journey.ts",
+    "db:seed-clients": "tsx scripts/seed-clients.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",

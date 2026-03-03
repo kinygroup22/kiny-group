@@ -132,16 +132,16 @@ export default function AboutPage() {
                   <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center text-primary-foreground shadow-lg">
                     <Eye className="h-6 w-6 md:h-7 md:w-7" />
                   </div>
-                  <CardTitle className="text-xl md:text-2xl">Our Vision</CardTitle>
+                  <CardTitle className="text-xl md:text-2xl">Visi Kami</CardTitle>
                 </div>
                 <CardDescription className="text-sm md:text-base leading-relaxed">
-                  To enrich lives through transformative educational programs and cultural initiatives, empowering the next generation of diverse leaders.
+                  Memperkaya kehidupan melalui program pendidikan yang transformatif dan inisiatif budaya, memberdayakan generasi pemimpin yang beragam di masa depan.
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="pt-4 border-t border-border">
                   <p className="text-xs md:text-sm text-muted-foreground italic">
-                    Enriching lives through transformative educational programs and cultural initiatives, empowering the next generation of diverse leaders.
+                    To enrich lives through transformative educational programs and cultural initiatives, empowering the next generation of diverse leaders.
                   </p>
                 </div>
               </CardContent>
@@ -157,13 +157,13 @@ export default function AboutPage() {
                   <CardTitle className="text-xl md:text-2xl">Our Mission</CardTitle>
                 </div>
                 <CardDescription className="text-sm md:text-base leading-relaxed">
-                  Kiny Group is dedicated to enhancing global connections through our multifaceted services in education, cultural exchange, and community development.
+                  &quot;Kiny Group is dedicated to enhancing global connections through our multifaceted services&quot;
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="pt-4 border-t border-border">
                   <p className="text-xs md:text-sm text-muted-foreground italic">
-                    Enhancing global connections through our multifaceted services in education, cultural exchange, and community development.
+                    &quot;Kiny Group berdedikasi untuk memperkuat koneksi global melalui berbagai layanan kami yang komprehensif&quot;
                   </p>
                 </div>
               </CardContent>

@@ -22,15 +22,15 @@ async function clearBrandData() {
   try {
     // Delete all brand activities first (due to foreign key constraint)
     await db.delete(brandActivities);
-    console.log("Deleted all brand activities");
+    console.log("✅ Deleted all brand activities");
     
     // Delete all brand images
     await db.delete(brandDivisionImages);
-    console.log("Deleted all brand images");
+    console.log("✅ Deleted all brand images");
     
     // Delete all brand divisions
     await db.delete(brandDivisions);
-    console.log("Deleted all brand divisions");
+    console.log("✅ Deleted all brand divisions");
     
     console.log("Brand data cleared successfully!");
   } catch (error) {
@@ -43,8 +43,8 @@ async function seedBrands() {
   console.log("Seeding brand divisions...");
 
   try {
-    // Get admin user to use as author for all brands
-    const [adminUser] = await db.select().from(users).where(eq(users.email, "admin@example.com"));
+    // Get admin user to use as author for all brands - using the updated admin email
+    const [adminUser] = await db.select().from(users).where(eq(users.email, "thoriq@kcifoundation.org"));
     
     if (!adminUser) {
       console.error("Admin user not found. Please run the main seeder first.");
@@ -638,6 +638,7 @@ async function seedBrands() {
       
       // Insert brand division
       const [newBrand] = await db.insert(brandDivisions).values(brandOnlyData).returning();
+      console.log(`✅ Created brand: ${brandOnlyData.name}`);
       
       // Add sample images for each brand
       const sampleImages = [
@@ -665,6 +666,7 @@ async function seedBrands() {
       ];
       
       await db.insert(brandDivisionImages).values(sampleImages);
+      console.log(`✅ Created 3 sample images for brand: ${brandOnlyData.name}`);
       
       // Add activities for this brand
       if (activities && activities.length > 0) {
@@ -674,24 +676,38 @@ async function seedBrands() {
         }));
         
         await db.insert(brandActivities).values(activitiesWithBrandId);
-        console.log(`Created ${activities.length} activities for brand: ${brandOnlyData.name}`);
+        console.log(`✅ Created ${activities.length} activities for brand: ${brandOnlyData.name}`);
       }
-      
-      console.log(`Created brand: ${brandOnlyData.name}`);
     }
 
-    console.log("Brand divisions seeded successfully!");
+    console.log("\n" + "=".repeat(50));
+    console.log("🎉 Brand divisions seeded successfully!");
+    console.log("=".repeat(50));
+    console.log("\n📋 Summary:");
+    console.log(`  • ${brandDivisionsData.length} brand divisions created`);
+    console.log(`  • ${brandDivisionsData.length * 3} sample images created`);
+    console.log(`  • ${brandDivisionsData.length * 3} activities created`);
+    
   } catch (error) {
-    console.error("Error seeding brand divisions:", error);
+    console.error("\n❌ Error seeding brand divisions:", error);
+    throw error;
   }
 }
 
 async function main() {
-  // First clear existing data
-  await clearBrandData();
-  
-  // Then seed new data
-  await seedBrands();
+  try {
+    // First clear existing data
+    await clearBrandData();
+    
+    // Then seed new data
+    await seedBrands();
+    
+    console.log("\n✅ Brand seeding script completed successfully");
+    process.exit(0);
+  } catch (error) {
+    console.error("\n❌ Brand seeding script failed:", error);
+    process.exit(1);
+  }
 }
 
 main();

@@ -22,8 +22,8 @@ async function seedAboutPage() {
   console.log("Seeding About page data...");
 
   try {
-    // Get admin user for authorId
-    const [adminUser] = await db.select().from(users).where(eq(users.email, "admin@example.com"));
+    // Get admin user for authorId - using the updated admin email
+    const [adminUser] = await db.select().from(users).where(eq(users.email, "thoriq@kcifoundation.org"));
     
     if (!adminUser) {
       console.error("Admin user not found. Please run the main seeder first to create users.");
@@ -91,6 +91,9 @@ async function seedAboutPage() {
       
       if (existingAchievement.length === 0) {
         await db.insert(achievements).values(achievementData);
+        console.log(`✅ Created achievement: ${achievementData.title}`);
+      } else {
+        console.log(`ℹ️ Achievement already exists: ${achievementData.title}`);
       }
     }
 
@@ -136,8 +139,10 @@ async function seedAboutPage() {
       if (existingDepartment.length === 0) {
         const [newDepartment] = await db.insert(departments).values(departmentData).returning();
         insertedDepartments.push(newDepartment);
+        console.log(`✅ Created department: ${departmentData.name}`);
       } else {
         insertedDepartments.push(existingDepartment[0]);
+        console.log(`ℹ️ Department already exists: ${departmentData.name}`);
       }
     }
 
@@ -254,6 +259,9 @@ async function seedAboutPage() {
       
       if (existingMember.length === 0) {
         await db.insert(teamMembers).values(memberData);
+        console.log(`✅ Created team member: ${memberData.name}`);
+      } else {
+        console.log(`ℹ️ Team member already exists: ${memberData.name}`);
       }
     }
 
@@ -309,6 +317,9 @@ async function seedAboutPage() {
       
       if (existingClient.length === 0) {
         await db.insert(clients).values(clientData);
+        console.log(`✅ Created client: ${clientData.name}`);
+      } else {
+        console.log(`ℹ️ Client already exists: ${clientData.name}`);
       }
     }
 
@@ -373,13 +384,35 @@ async function seedAboutPage() {
       
       if (existingJourney.length === 0) {
         await db.insert(journeyItems).values(journeyData);
+        console.log(`✅ Created journey item: ${journeyData.title}`);
+      } else {
+        console.log(`ℹ️ Journey item already exists: ${journeyData.title}`);
       }
     }
 
-    console.log("About page data seeded successfully!");
+    console.log("\n" + "=".repeat(50));
+    console.log("🎉 About page data seeded successfully!");
+    console.log("=".repeat(50));
+    console.log("\n📋 Summary:");
+    console.log("  • 7 achievements created");
+    console.log("  • 4 departments created");
+    console.log("  • 8 team members created");
+    console.log("  • 8 clients created");
+    console.log("  • 7 journey items created");
+    
   } catch (error) {
-    console.error("Error seeding About page data:", error);
+    console.error("\n❌ Error seeding About page data:", error);
+    throw error;
   }
 }
 
-seedAboutPage();
+// Run the seed function
+seedAboutPage()
+  .then(() => {
+    console.log("\n✅ About page seed script completed successfully");
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error("\n❌ About page seed script failed:", error);
+    process.exit(1);
+  });

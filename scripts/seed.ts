@@ -26,17 +26,28 @@ async function seed() {
     // ==================== CREATE USERS ====================
     console.log("👥 Creating users...");
     
-    // Admin User
-    const adminPassword = await bcrypt.hash("admin123", 10);
+    // Admin Users
+    const thoriqPassword = await bcrypt.hash("admin123", 10);
     await db.insert(users).values({
-      name: "Admin User",
-      email: "admin@example.com",
-      password: adminPassword,
+      name: "Thoriq",
+      email: "thoriq@kcifoundation.org",
+      password: thoriqPassword,
       role: userRoles.ADMIN,
     }).onConflictDoNothing();
     
-    const [adminUser] = await db.select().from(users).where(eq(users.email, "admin@example.com"));
-    console.log("✅ Admin user created");
+    const [thoriqAdmin] = await db.select().from(users).where(eq(users.email, "thoriq@kcifoundation.org"));
+    console.log("✅ Thoriq admin user created");
+
+    const nathaliaPassword = await bcrypt.hash("admin123", 10);
+    await db.insert(users).values({
+      name: "Nathalia",
+      email: "nathalia@kcifoundation.org",
+      password: nathaliaPassword,
+      role: userRoles.ADMIN,
+    }).onConflictDoNothing();
+    
+    const [nathaliaAdmin] = await db.select().from(users).where(eq(users.email, "nathalia@kcifoundation.org"));
+    console.log("✅ Nathalia admin user created");
 
     // Editor User
     const editorPassword = await bcrypt.hash("editor123", 10);
@@ -138,7 +149,7 @@ async function seed() {
         featuredImage: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=800&fit=crop",
         featured: true,
         isEvent: false,
-        authorId: adminUser.id,
+        authorId: thoriqAdmin.id, // Using thoriqAdmin instead of adminUser
         category: "Teknologi",
         readTime: 5,
         views: 0,
@@ -241,7 +252,7 @@ async function seed() {
         featuredImage: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=1200&h=800&fit=crop",
         featured: true,
         isEvent: true,
-        authorId: editorUser.id,
+        authorId: nathaliaAdmin.id, // Using nathaliaAdmin instead of editorUser
         category: "Event",
         readTime: 3,
         views: 0,
@@ -372,7 +383,7 @@ async function seed() {
     console.log("🎉 Database seeded successfully!");
     console.log("=".repeat(50));
     console.log("\n📋 Summary:");
-    console.log("  • 4 users created (admin, editor, contributor, reader)");
+    console.log("  • 5 users created (2 admins, editor, contributor, reader)");
     console.log("  • 3 categories created (teknologi, pendidikan, event)");
     console.log("  • 1 regular blog post created");
     console.log("  • 1 event post created with 3 sample registrations");
@@ -381,7 +392,8 @@ async function seed() {
     console.log("┌─────────────┬──────────────────────────┬─────────────┐");
     console.log("│ Role        │ Email                    │ Password    │");
     console.log("├─────────────┼──────────────────────────┼─────────────┤");
-    console.log("│ Admin       │ admin@example.com        │ admin123    │");
+    console.log("│ Admin       │ thoriq@kcifoundation.org │ admin123    │");
+    console.log("│ Admin       │ nathalia@kcifoundation.org│ admin123    │");
     console.log("│ Editor      │ editor@example.com       │ editor123   │");
     console.log("│ Contributor │ contributor@example.com  │ contributor123 │");
     console.log("│ Reader      │ reader@example.com       │ reader123   │");

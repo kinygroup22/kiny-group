@@ -44,9 +44,9 @@ export default function ContactPage() {
     setSubmitStatus({ type: null, message: '' });
 
     try {
-      const serviceId = 'service_d6ttodn';
-      const templateId = 'template_pdvbihx';
-      const publicKey = '1Hzn3cIba12k3xxg_';
+      const serviceId = 'service_fi90r5q';
+      const templateId = 'template_m3v0qwa';
+      const publicKey = 'WVPV-EL86qtVrkKYv';
 
       const templateParams = {
         from_name: formData.name,
@@ -55,7 +55,7 @@ export default function ContactPage() {
         subject: formData.subject,
         message: formData.message,
         to_name: 'KINY GROUP Team',
-        to_email: 'ferdinandluis88@gmail.com',
+        to_email: 'kcifound@kcifoundation.org',
       };
 
       await emailjs.send(
@@ -78,6 +78,9 @@ export default function ContactPage() {
         message: ""
       });
     } catch (error) {
+      const ejsError = error as { status?: number; text?: string };
+      console.error('EmailJS status:', ejsError?.status);
+      console.error('EmailJS text:', ejsError?.text);
       console.error('EmailJS Error:', error);
       setSubmitStatus({
         type: 'error',
@@ -99,25 +102,25 @@ export default function ContactPage() {
     {
       icon: <MapPin className="h-5 w-5" />,
       title: "Alamat Kantor",
-      content: "Jl. Example Street No. 123, Jakarta Selatan, DKI Jakarta 12345",
+      content: "Jl. Tebet Timur Dalam II No.38B, Tebet Tim., Kec. Tebet, Kota Jakarta Selatan, Daerah Khusus Ibukota Jakarta 12820",
       link: null
     },
     {
       icon: <Phone className="h-5 w-5" />,
       title: "Telepon",
-      content: "+62 21 1234 5678",
-      link: "tel:+622112345678"
+      content: "021 83787735/36/37",
+      link: "tel:+622183787735"
     },
     {
       icon: <Mail className="h-5 w-5" />,
       title: "Email",
-      content: "info@kinygroup.com",
-      link: "mailto:info@kinygroup.com"
+      content: "kcifound@kcifoundation.org",
+      link: "mailto:kcifound@kcifoundation.org"
     },
     {
       icon: <Clock className="h-5 w-5" />,
       title: "Jam Operasional",
-      content: "Senin - Jumat: 09:00 - 17:00 WIB",
+      content: "Senin - Jum'at 09.00 - 17.30 WIB",
       link: null
     }
   ];
@@ -196,7 +199,7 @@ export default function ContactPage() {
               </div>
 
               {/* Map */}
-              <div>
+              {/* <div>
                 <h3 className="text-lg md:text-xl font-bold mb-4 md:mb-6 border-b border-gold-500/20 pb-4">
                   Lokasi Kami
                 </h3>
@@ -220,7 +223,7 @@ export default function ContactPage() {
                     </div>
                   </a>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Right Column - Contact Form */}
