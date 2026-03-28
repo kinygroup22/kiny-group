@@ -187,6 +187,7 @@ export const brandDivisions = pgTable("brand_divisions", {
     hover: '',
     gradient: '',
   }),
+  order: integer("order").default(0),
   featured: boolean("featured").default(false),
   // New contact information fields
   email: varchar("email", { length: 255 }).default("info@kcifoundation.org"),

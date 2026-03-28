@@ -13,51 +13,80 @@ async function seedClients() {
   console.log("Seeding clients data...");
 
   try {
-    // Clear existing clients data
     console.log("Clearing existing clients data...");
     await db.delete(clients);
     console.log("✅ Cleared existing clients");
 
     const clientsData = [
+      // === Row 1: Government ===
       {
-        name: "Harvard University",
-        logoUrl: "https://picsum.photos/seed/harvard/200/100.jpg",
+        name: "Wakil Presiden Republik Indonesia",
+        logoUrl: "/clients/wakil-presiden-ri.png",
         order: 0,
       },
       {
-        name: "Stanford University",
-        logoUrl: "https://picsum.photos/seed/stanford/200/100.jpg",
+        name: "TNI / Polri",
+        logoUrl: "/clients/tni-polri.png",
         order: 1,
       },
       {
-        name: "MIT",
-        logoUrl: "https://picsum.photos/seed/mit/200/100.jpg",
+        name: "Kementerian Pendidikan dan Kebudayaan",
+        logoUrl: "/clients/kemendikbud.png",
         order: 2,
       },
       {
-        name: "Oxford University",
-        logoUrl: "https://picsum.photos/seed/oxford/200/100.jpg",
+        name: "Kementerian Koperasi dan UKM",
+        logoUrl: "/clients/kementerian-koperasi-ukm.png",
         order: 3,
       },
       {
-        name: "Cambridge University",
-        logoUrl: "https://picsum.photos/seed/cambridge/200/100.jpg",
+        name: "Kementerian Perdagangan Republik Indonesia",
+        logoUrl: "/clients/kemendag.png",
         order: 4,
       },
+
+      // === Row 2: State-Owned Enterprises ===
       {
-        name: "Yale University",
-        logoUrl: "https://picsum.photos/seed/yale/200/100.jpg",
+        name: "BUMN - Kementerian BUMN",
+        logoUrl: "/clients/bumn.png",
         order: 5,
       },
       {
-        name: "Princeton University",
-        logoUrl: "https://picsum.photos/seed/princeton/200/100.jpg",
+        name: "Pemerintah Daerah",
+        logoUrl: "/clients/pemda.png",
         order: 6,
       },
       {
-        name: "Columbia University",
-        logoUrl: "https://picsum.photos/seed/columbia/200/100.jpg",
+        name: "Lembaga Pemerintah",
+        logoUrl: "/clients/lembaga-pemerintah.png",
         order: 7,
+      },
+      {
+        name: "Pertamina",
+        logoUrl: "/clients/pertamina.png",
+        order: 8,
+      },
+
+      // === Row 3: Banks / Financial ===
+      {
+        name: "Bank Rakyat Indonesia (BRI)",
+        logoUrl: "/clients/bri.png",
+        order: 9,
+      },
+      {
+        name: "Citibank",
+        logoUrl: "/clients/citibank.png",
+        order: 10,
+      },
+      {
+        name: "Tugure Insurance",
+        logoUrl: "/clients/tugure.png",
+        order: 11,
+      },
+      {
+        name: "Bank Negara Indonesia (BNI)",
+        logoUrl: "/clients/bni.png",
+        order: 12,
       },
     ];
 

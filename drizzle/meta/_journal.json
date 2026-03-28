@@ -8,6 +8,13 @@
       "when": 1770037275717,
       "tag": "0000_friendly_random",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1774675825945,
+      "tag": "0001_lying_scalphunter",
+      "breakpoints": true
     }
   ]
 }

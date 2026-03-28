@@ -8,7 +8,7 @@ import {
   brandDivisionImages,
   brandActivities
 } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 // Load environment variables from .env.local
 dotenv.config({ path: '.env.local' });
