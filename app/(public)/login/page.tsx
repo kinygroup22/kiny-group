@@ -245,7 +245,7 @@ function LoginForm() {
         </Card>
 
         {/* Demo Credentials */}
-        <Card className="mt-4 border-navy-200 dark:border-navy-700 py-6">
+        {/* <Card className="mt-4 border-navy-200 dark:border-navy-700 py-6">
           <CardHeader>
             <CardTitle className="text-sm">Demo Credentials</CardTitle>
           </CardHeader>
@@ -255,7 +255,7 @@ function LoginForm() {
             <p><strong>Contributor:</strong> contributor@example.com / contributor123</p>
             <p><strong>Reader:</strong> reader@example.com / reader123</p>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     </div>
   );
